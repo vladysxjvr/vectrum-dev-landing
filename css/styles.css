@@ -98,10 +98,6 @@ h1,h2,h3{text-wrap:balance}
 .browse svg{transition:transform .2s}
 .browse:hover svg{transform:translate(2px,-2px)}
 
-/* stack */
-.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:20px;margin-top:64px}
-.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;height:156px;padding:0 8px;border-radius:8px;background:var(--surface);border:1px solid var(--line);text-align:center}
-.tile span{font-size:19px;font-weight:700}
 
 /* form */
 .discuss{position:relative;overflow:hidden}
@@ -249,10 +245,6 @@ h1,h2,h3{text-wrap:balance}
   .proj-cta p{font-size:17px}
   .proj-cta .btn{width:100%}
   .pchip{top:10px;left:10px}
-  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:36px}
-  .tile{height:128px;gap:14px}
-  .tile span{font-size:16px}
-  .tile.desk{display:none}
   .fgrid{grid-template-columns:minmax(0,1fr)}
   .fcol{gap:12px}
   .field textarea{height:60px;line-height:1.5;padding-top:26px;background:none;border-bottom:1px solid var(--line-strong)}
