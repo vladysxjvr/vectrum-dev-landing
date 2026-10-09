@@ -125,6 +125,17 @@ form.addEventListener('submit', function(e){
   setTimeout(function(){ btn.innerHTML = '<span data-t="order"></span>'; btn.querySelector('span').textContent = t('order'); }, 2200);
 });
 
+/* portfolio: if a project image fails to load, show a branded cover instead of a broken image */
+document.querySelectorAll('.pcard img').forEach(function(img){
+  function fallback(){
+    var c = document.createElement('div');
+    c.className = 'cover cover-vl'; c.setAttribute('role','img'); c.setAttribute('aria-label', img.alt);
+    var n = document.createElement('span'); n.className = 'cover-name'; n.textContent = img.alt;
+    c.appendChild(n); img.replaceWith(c);
+  }
+  if(img.complete && img.naturalWidth === 0) fallback(); else img.addEventListener('error', fallback);
+});
+
 /* header: turns into a floating rounded bar once the page scrolls */
 var hdr = document.getElementById('hdr');
 function onScroll(){ hdr.classList.toggle('scrolled', window.scrollY > 24); }

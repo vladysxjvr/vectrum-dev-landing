@@ -10,7 +10,7 @@ Open `index.html` in a browser. No build step.
 Breakpoints: desktop header ≥ 1024px, burger menu < 1024px, single-column layout < 900px.
 
 Placeholders to replace before launch:
-- portfolio images (cut from a screenshot, ~400px wide);
+- portfolio covers: Vectrum Logistics and Normobaria use temporary CSS covers, Joy Lab image is cut from a screenshot (~400px), Aquila Hotel image is loaded from aquila-hotel.pl;
 - e-mail `Contact@[domain]`;
 - answers for FAQ questions 1, 2 and 4 (all languages);
 - links for "Browse" and social icons;
