@@ -216,7 +216,8 @@ h1,h2,h3{text-wrap:balance}
 }
 @media (max-width:900px){
   .wrap{padding-inline:20px}
-  .hero .wrap{padding-block:96px 140px}
+  .hero{min-height:100vh;min-height:100svh;display:flex;flex-direction:column}
+  .hero .wrap{flex:1;justify-content:center;width:100%;padding-block:40px 56px}
   .hero h1{font-size:40px}
   .hero p{font-size:15px}
   .hero .btn{width:100%}
