@@ -49,6 +49,7 @@
   <a class="btn" href="#contacts" data-close data-t="order">Order the project</a>
 </div>
 
+<div id="homeView">
 <section class="hero">
   <div class="wrap">
     <h1><span data-t="h1">We build digital products that generate</span> <em data-t="h1a">revenue</em></h1>
@@ -76,10 +77,10 @@
   <div class="wrap">
     <h2 class="h2 center" data-t="pfTitle">Portfolio</h2>
     <div class="pgrid">
-      <article class="pcard"><div class="cover cover-vl" role="img" aria-label="Vectrum Logistics"><span class="cover-name">Vectrum Logistics</span><span class="cover-sub">TMS · Web &amp; Mobile</span></div><div class="pmeta"><div><div class="tag" data-t="tSaas"></div><h3>Vectrum Logistics.</h3></div><span class="pstatus" data-t="inDev">In development</span></div><p class="pdesc" data-t="d1"></p></article>
-      <article class="pcard"><div class="cover cover-nb" role="img" aria-label="Normobaria"><span class="cover-name">Normobaria</span><span class="cover-sub">Wellness · Kraków</span></div><div class="pmeta"><div><div class="tag" data-t="tApp"></div><h3>Normobaria.</h3></div><a class="browse" href="https://apps.apple.com/pl/app/krakowska-normobaria/id6759474880" target="_blank" rel="noopener"><span data-t="browse">Browse</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div><p class="pdesc" data-t="d2"></p></article>
-      <article class="pcard"><img src="img/joylab.jpg" alt="Joy Lab" loading="lazy"><div class="pmeta"><div><div class="tag" data-t="tLanding"></div><h3>Joy Lab.</h3></div><a class="browse" href="https://joylab.beauty" target="_blank" rel="noopener"><span data-t="browse">Browse</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div><p class="pdesc" data-t="d3"></p></article>
-      <article class="pcard"><img src="https://aquila-hotel.pl/images/hotel-1.jpg" alt="Aquila Hotel" loading="lazy"><div class="pmeta"><div><div class="tag" data-t="tWebsite"></div><h3>Aquila Hotel.</h3></div><a class="browse" href="https://aquila-hotel.pl" target="_blank" rel="noopener"><span data-t="browse">Browse</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div><p class="pdesc" data-t="d4"></p></article>
+      <article class="pcard"><a class="pmedia" href="#normobaria" tabindex="-1" aria-hidden="true"><img src="img/projects/cover-normobaria.webp" alt="" loading="lazy"><span class="pchip" data-t="inDev">In development</span></a><div class="pmeta"><div><div class="tag" data-t="tApp"></div><h3>Normobaria.</h3></div><a class="browse" href="#normobaria"><span data-t="viewProject"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div><p class="pdesc" data-t="d2"></p></article>
+      <article class="pcard"><a class="pmedia" href="https://aquila-hotel.pl" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="img/projects/cover-aquila.webp" alt="" loading="lazy"></a><div class="pmeta"><div><div class="tag" data-t="tWebsite"></div><h3>Aquila Hotel.</h3></div><a class="browse" href="https://aquila-hotel.pl" target="_blank" rel="noopener"><span data-t="browse"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div><p class="pdesc" data-t="d4"></p></article>
+      <article class="pcard"><a class="pmedia" href="https://joylab.beauty" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="img/projects/cover-joylab.webp" alt="" loading="lazy"></a><div class="pmeta"><div><div class="tag" data-t="tLanding"></div><h3>Joy Lab.</h3></div><a class="browse" href="https://joylab.beauty" target="_blank" rel="noopener"><span data-t="browse"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div><p class="pdesc" data-t="d3"></p></article>
+      <article class="pcard"><a class="pmedia" href="#vectrum-space" tabindex="-1" aria-hidden="true"><img src="img/projects/cover-vectrum.webp" alt="" loading="lazy"><span class="pchip" data-t="inDev">In development</span></a><div class="pmeta"><div><div class="tag" data-t="tSaas"></div><h3>Vectrum Space.</h3></div><a class="browse" href="#vectrum-space"><span data-t="viewProject"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div><p class="pdesc" data-t="d1"></p></article>
     </div>
   </div>
 </section>
@@ -155,13 +156,40 @@
   <div class="wrap">
     <h2 class="h2 center" data-t="faqTitle">FAQ</h2>
     <div class="faqs" id="faqs">
-      <div class="faq"><button type="button" aria-expanded="false" aria-controls="q1"><span data-t="q1">What does ordering a website mean?</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button><div class="ans" id="q1" data-t="tbd" hidden>[Answer text]</div></div>
-      <div class="faq"><button type="button" aria-expanded="false" aria-controls="q2"><span data-t="q2">What is included in a website?</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button><div class="ans" id="q2" data-t="tbd" hidden>[Answer text]</div></div>
+      <div class="faq"><button type="button" aria-expanded="false" aria-controls="q1"><span data-t="q1">What does ordering a website mean?</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button><div class="ans" id="q1" data-t="q1a" hidden></div></div>
+      <div class="faq"><button type="button" aria-expanded="false" aria-controls="q2"><span data-t="q2">What is included in a website?</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button><div class="ans" id="q2" data-t="q2a" hidden></div></div>
       <div class="faq open"><button type="button" aria-expanded="true" aria-controls="q3"><span data-t="q3">How does the website development process work?</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button><div class="ans" id="q3" data-t="q3a">In general, the website development process consists of the following stages: target audience analysis, prototype creation, design development, code writing, and deployment to a domain.</div></div>
-      <div class="faq"><button type="button" aria-expanded="false" aria-controls="q4"><span data-t="q4">What guarantees do we provide?</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button><div class="ans" id="q4" data-t="tbd" hidden>[Answer text]</div></div>
+      <div class="faq"><button type="button" aria-expanded="false" aria-controls="q4"><span data-t="q4">What guarantees do we provide?</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4D76F7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></button><div class="ans" id="q4" data-t="q4a" hidden></div></div>
     </div>
   </div>
 </section>
+
+</div>
+
+<div id="projectView" hidden>
+<article class="proj" id="p-normobaria" hidden>
+  <div class="wrap">
+    <a class="back" href="#portfolio"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span data-t="backAll"></span></a>
+    <div class="proj-head"><div class="tag" data-t="tApp"></div><h1 class="proj-title">Krakowska Normobaria</h1>
+      <div class="devnote"><span class="pstatus" data-t="inDev"></span><span data-t="devNote"></span></div></div>
+    <div class="proj-body"><p class="proj-lead" data-t="nbLead"></p><dl class="facts"><div><dt data-t="fClient"></dt><dd data-t="nbClient"></dd></div><div><dt data-t="fPlatform"></dt><dd data-t="nbPlatform"></dd></div><div><dt data-t="fYears"></dt><dd data-t="nbYears"></dd></div><div><dt data-t="fUsers"></dt><dd data-t="nbUsers"></dd></div></dl></div>
+    <h2 class="proj-h" data-t="featTitle"></h2><ul class="feats"><li><i class="sq"></i><span data-t="nbF1"></span></li><li><i class="sq"></i><span data-t="nbF2"></span></li><li><i class="sq"></i><span data-t="nbF3"></span></li><li><i class="sq"></i><span data-t="nbF4"></span></li><li><i class="sq"></i><span data-t="nbF5"></span></li><li><i class="sq"></i><span data-t="nbF6"></span></li></ul>
+    <h2 class="proj-h" data-t="shotsTitle"></h2><div class="gallery g-phone"><figure class="shot "><img src="img/projects/n-home.webp" alt="" loading="lazy"><figcaption data-t="nbS1"></figcaption></figure><figure class="shot "><img src="img/projects/n-qr.webp" alt="" loading="lazy"><figcaption data-t="nbS2"></figcaption></figure><figure class="shot "><img src="img/projects/n-calendar.webp" alt="" loading="lazy"><figcaption data-t="nbS3"></figcaption></figure><figure class="shot "><img src="img/projects/n-sessions.webp" alt="" loading="lazy"><figcaption data-t="nbS4"></figcaption></figure><figure class="shot "><img src="img/projects/n-shop.webp" alt="" loading="lazy"><figcaption data-t="nbS5"></figcaption></figure></div>
+    <div class="proj-cta"><p data-t="projCta"></p><a class="btn" href="#contacts" data-t="cta"></a></div>
+  </div>
+</article>
+<article class="proj" id="p-vectrum-space" hidden>
+  <div class="wrap">
+    <a class="back" href="#portfolio"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span data-t="backAll"></span></a>
+    <div class="proj-head"><div class="tag" data-t="tSaas"></div><h1 class="proj-title">Vectrum Space</h1>
+      <div class="devnote"><span class="pstatus" data-t="inDev"></span><span data-t="devNote"></span></div></div>
+    <div class="proj-body"><p class="proj-lead" data-t="vsLead"></p><dl class="facts"><div><dt data-t="fType"></dt><dd data-t="vsType"></dd></div><div><dt data-t="fPlatform"></dt><dd data-t="vsPlatform"></dd></div><div><dt data-t="fYears"></dt><dd data-t="vsYears"></dd></div><div><dt data-t="fStatus"></dt><dd data-t="vsStatus"></dd></div></dl></div>
+    <h2 class="proj-h" data-t="featTitle"></h2><ul class="feats"><li><i class="sq"></i><span data-t="vsF1"></span></li><li><i class="sq"></i><span data-t="vsF2"></span></li><li><i class="sq"></i><span data-t="vsF3"></span></li><li><i class="sq"></i><span data-t="vsF4"></span></li><li><i class="sq"></i><span data-t="vsF5"></span></li><li><i class="sq"></i><span data-t="vsF6"></span></li></ul>
+    <h2 class="proj-h" data-t="shotsTitle"></h2><div class="gallery g-desk"><figure class="shot wide"><img src="img/projects/v-overview.webp" alt="" loading="lazy"><figcaption data-t="vsS1"></figcaption></figure><figure class="shot "><img src="img/projects/v-upload.webp" alt="" loading="lazy"><figcaption data-t="vsS2"></figcaption></figure><figure class="shot "><img src="img/projects/v-dispatch.webp" alt="" loading="lazy"><figcaption data-t="vsS3"></figcaption></figure><figure class="shot "><img src="img/projects/v-tracking.webp" alt="" loading="lazy"><figcaption data-t="vsS4"></figcaption></figure><figure class="shot "><img src="img/projects/v-fleet.webp" alt="" loading="lazy"><figcaption data-t="vsS5"></figcaption></figure></div>
+    <div class="proj-cta"><p data-t="projCta"></p><a class="btn" href="#contacts" data-t="cta"></a></div>
+  </div>
+</article>
+</div>
 
 <footer class="foot">
   <div class="wrap">

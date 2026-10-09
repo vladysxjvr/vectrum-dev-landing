@@ -142,8 +142,29 @@ function onScroll(){ hdr.classList.toggle('scrolled', window.scrollY > 24); }
 window.addEventListener('scroll', onScroll, {passive:true});
 onScroll();
 
+/* simple hash router: #normobaria and #vectrum-space open a project page */
+var PROJECTS = ['normobaria','vectrum-space'];
+var homeView = document.getElementById('homeView'), projectView = document.getElementById('projectView');
+function route(){
+  var h = location.hash.replace('#','');
+  if(PROJECTS.indexOf(h) !== -1){
+    homeView.hidden = true; projectView.hidden = false;
+    projectView.querySelectorAll('.proj').forEach(function(p){ p.hidden = p.id !== 'p-' + h; });
+    window.scrollTo(0,0);
+    document.title = (h === 'normobaria' ? 'Krakowska Normobaria' : 'Vectrum Space') + ' — Vectrum Dev';
+  } else if(homeView.hidden){
+    projectView.hidden = true; homeView.hidden = false;
+    document.title = 'Vectrum Dev';
+    var target = h && document.getElementById(h);
+    if(target) target.scrollIntoView(); else window.scrollTo(0,0);
+  }
+  onScroll();
+}
+window.addEventListener('hashchange', route);
+
 /* start */
 var saved = null;
 try { saved = localStorage.getItem('vd-lang'); } catch(e){}
 apply(saved || 'en');
+route();
 })();
