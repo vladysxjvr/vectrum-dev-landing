@@ -218,6 +218,8 @@ h1,h2,h3{text-wrap:balance}
   .wrap{padding-inline:20px}
   .hero{min-height:100vh;min-height:100lvh;display:flex;flex-direction:column}
   .hero .wrap{flex:1;justify-content:center;width:100%;padding-block:40px 56px}
+  .discuss{min-height:100vh;min-height:100lvh;display:flex;flex-direction:column;scroll-margin-top:0;padding-block:100px 64px}
+  .discuss .wrap{flex:1;justify-content:center;width:100%}
   .hero h1{font-size:40px}
   .hero p{font-size:15px}
   .hero .btn{width:100%}
