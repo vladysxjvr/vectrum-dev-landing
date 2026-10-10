@@ -216,8 +216,10 @@ h1,h2,h3{text-wrap:balance}
 }
 @media (max-width:900px){
   .wrap{padding-inline:20px}
-  .hero{min-height:100vh;min-height:100lvh;display:flex;flex-direction:column}
-  .hero .wrap{flex:1;justify-content:center;width:100%;padding-block:40px 56px}
+  /* hero fills the screen; +96px of background reaches under Safari's floating bottom bar,
+     the same 96px is added to bottom padding so text and button stay where they were */
+  .hero{min-height:calc(100vh + 96px);min-height:calc(100lvh + 96px);display:flex;flex-direction:column}
+  .hero .wrap{flex:1;justify-content:center;width:100%;padding-block:40px 152px}
   .discuss{min-height:100vh;min-height:100lvh;display:flex;flex-direction:column;scroll-margin-top:0;padding-block:100px 64px}
   .discuss .wrap{flex:1;justify-content:center;width:100%}
   .hero h1{font-size:40px}
