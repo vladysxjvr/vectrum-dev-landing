@@ -136,6 +136,63 @@ document.querySelectorAll('.pcard img').forEach(function(img){
   if(img.complete && img.naturalWidth === 0) fallback(); else img.addEventListener('error', fallback);
 });
 
+/* intro overlap: hero darkens and recedes as Services slides over it */
+var introHero = document.querySelector('.intro-stack .hero'), introSvc = document.getElementById('services'), introTick = false;
+function introProgress(){
+  introTick = false;
+  if(!introHero || introHero.offsetParent === null) return;
+  var vh = window.innerHeight, top = introSvc.getBoundingClientRect().top;
+  var p = Math.min(1, Math.max(0, (vh - top) / vh));
+  introHero.style.setProperty('--p', p.toFixed(3));
+}
+window.addEventListener('scroll', function(){ if(!introTick){ introTick = true; requestAnimationFrame(introProgress); } }, {passive:true});
+window.addEventListener('resize', introProgress);
+introProgress();
+
+/* scroll reveal: elements with .reveal fade in once they enter the screen */
+(function(){
+  document.documentElement.classList.add('js-reveal');
+  // single blocks that fade in on their own
+  var SINGLE = ['#services .h2','#services .lead','#benefits .h2','#contacts .h2','#contacts .sub','#contacts .form',
+    '#about .h2','#about .intro','#about .about-q','#about .more','.faqs','section:not(.hero) > .wrap > .h2.center',
+    '.fbot','.proj .back','.proj-head','.proj-body','.proj-h','.proj-cta'];
+  // groups whose children appear as a wave: delay = column index in the current row x 90ms
+  var GROUPS = ['#services .grid3','#benefits .grid3','.pgrid','#about .agrid','.faqs','.feats','.gallery','.fgrid4'];
+  SINGLE.forEach(function(sel){ document.querySelectorAll(sel).forEach(function(el){ if(!el.matches('.faqs')) el.classList.add('reveal'); }); });
+  GROUPS.forEach(function(sel){ document.querySelectorAll(sel).forEach(function(g){ [].forEach.call(g.children, function(c){ c.classList.add('reveal'); }); }); });
+  function stagger(){
+    GROUPS.forEach(function(sel){ document.querySelectorAll(sel).forEach(function(g){
+      var kids = [].slice.call(g.children), rows = {};
+      kids.forEach(function(c){
+        if(c.getAttribute('data-visible') === 'true' || c.offsetParent === null) return;
+        var top = Math.round(c.getBoundingClientRect().top + window.scrollY);
+        var col = (rows[top] = (rows[top] === undefined ? 0 : rows[top] + 1));
+        c.style.setProperty('--reveal-delay', (col * 90) + 'ms');
+      });
+    }); });
+  }
+  stagger();
+  var pending = [].slice.call(document.querySelectorAll('.reveal')), ticking = false;
+  // reveal anything whose top has entered the lower 92% of the screen (or that we already scrolled past)
+  function check(){
+    ticking = false;
+    var limit = window.innerHeight * 0.92;
+    // at the very bottom of the page, show whatever is left (e.g. the footer line)
+    if(window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4) limit = Infinity;
+    pending = pending.filter(function(el){
+      if(el.offsetParent === null) return true;
+      if(el.getBoundingClientRect().top < limit){ el.setAttribute('data-visible','true'); return false; }
+      return true;
+    });
+    if(!pending.length) window.removeEventListener('scroll', onScroll);
+  }
+  function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(check); } }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', function(){ stagger(); onScroll(); });
+  window.addEventListener('hashchange', function(){ setTimeout(function(){ stagger(); check(); }, 50); });
+  check();
+})();
+
 /* header: turns into a floating rounded bar once the page scrolls */
 var hdr = document.getElementById('hdr');
 function onScroll(){ hdr.classList.toggle('scrolled', window.scrollY > 24); }
