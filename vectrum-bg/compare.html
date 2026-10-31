@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vectrum BG Compare</title>
+<style>
+  @font-face{font-family:Raleway;src:url(assets/fonts/raleway-latin-v37.woff2) format('woff2');font-weight:400 900}
+  @font-face{font-family:Raleway;src:url(assets/fonts/raleway-latin-ext-v37.woff2) format('woff2');font-weight:400 900;unicode-range:U+0100-02BA,U+1E00-1E9F}
+  :root{--bg:#0D1019;--ink:#F2F4FA;--muted:#9AA3B8;--line:rgba(255,255,255,.08);--accent:#4D76F7}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:500 15px Raleway,system-ui,sans-serif}
+  header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:20px 24px}
+  h1{margin:0;font-weight:900;font-size:22px}
+  .ctl{display:flex;gap:8px;flex-wrap:wrap}
+  button{font:600 14px Raleway,sans-serif;color:var(--ink);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;padding:8px 14px;cursor:pointer}
+  button[aria-pressed=true]{background:var(--accent);border-color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 24px 32px}
+  @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.grid{grid-template-columns:1fr;padding:0 16px 24px}header{padding:16px}}
+  figure{margin:0}
+  .tile{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000}
+  video,.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ov{display:none;position:absolute;inset:0;padding:7.4%;pointer-events:none}
+  .ov img{position:static;width:auto;height:8.9%;display:block}
+  .ov h2{margin:9% 0 0;font-weight:900;font-size:clamp(14px,7cqw,76px);line-height:1.1;letter-spacing:-.01em;color:#F7F8FC}
+  .ov h2 em{font-style:normal;color:var(--accent)}
+  .ov p{margin:3.5% 0 0;max-width:80%;font-size:clamp(7px,2.9cqw,31px);line-height:1.45;color:#B4BCCF}
+  .tile{container-type:inline-size}
+  body.overlay .ov{display:block}
+  figcaption{display:flex;justify-content:space-between;padding:10px 2px 0;font-weight:700}
+  figcaption span{color:var(--muted);font-weight:500}
+</style>
+</head>
+<body>
+<header>
+  <h1>Vectrum Dev · фоны Instagram 1080×1080 · луп 10 с</h1>
+  <div class="ctl">
+    <button id="ov" aria-pressed="false">Наложить текст и логотип</button>
+    <button id="sync">Синхронизировать</button>
+  </div>
+</header>
+<main class="grid" id="grid"></main>
+<script>
+const V=[['01-fallen-stars','Fallen Stars'],['02-network','Network'],['03-europe-routes','Europe Routes'],['04-aurora','Aurora Glow'],['05-grid-horizon','Grid Horizon'],['06-hybrid','Hybrid']];
+const grid=document.getElementById('grid');
+V.forEach(([id,name],i)=>{
+  grid.insertAdjacentHTML('beforeend',`<figure><div class="tile">
+    <video src="renders/${id}/${id}.mp4" poster="renders/${id}/${id}-frame0.png" autoplay loop muted playsinline preload="auto"></video>
+    <div class="ov"><img src="assets/logo.png" alt=""><h2>Odkryj świat<br><em>Vectrum Dev</em></h2>
+    <p>Tworzymy nowoczesne rozwiązania cyfrowe, które wspierają rozwój firm i pomagają osiągać ambitne cele</p></div>
+  </div><figcaption>${i+1}. ${name}<span>${id}</span></figcaption></figure>`);
+});
+const vids=[...document.querySelectorAll('video')];
+const sync=()=>vids.forEach(v=>{v.currentTime=0;v.play().catch(()=>{});});
+document.getElementById('sync').onclick=sync;
+const ob=document.getElementById('ov');
+ob.onclick=()=>{const on=document.body.classList.toggle('overlay');ob.setAttribute('aria-pressed',on);};
+Promise.all(vids.map(v=>new Promise(r=>v.readyState>=3?r():v.addEventListener('canplay',r,{once:true})))).then(sync);
+</script>
+</body>
+</html>
