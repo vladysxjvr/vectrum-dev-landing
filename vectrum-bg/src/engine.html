@@ -9,6 +9,7 @@
 </style>
 <script src="../config/tokens.js"></script>
 <script src="../config/variants.js"></script>
+<script src="../assets/europe-dots.js"></script>
 </head>
 <body>
 <canvas id="c" width="1080" height="1080"></canvas>
@@ -226,7 +227,7 @@ function drawNetwork(cfg, st, p) {
   });
 }
 
-// ---------- europe routes (no map image: city constellation from real coordinates) ----------
+// ---------- europe routes: dot-matrix map of Europe (Natural Earth), vehicles as light points ----------
 const CITIES = {
   Krakow: [19.94, 50.06], Warsaw: [21.01, 52.23], Berlin: [13.40, 52.52], Prague: [14.42, 50.08], Vienna: [16.37, 48.21],
   Budapest: [19.04, 47.50], Munich: [11.58, 48.14], Hamburg: [9.99, 53.55], Amsterdam: [4.90, 52.37], Paris: [2.35, 48.86],
@@ -234,74 +235,114 @@ const CITIES = {
   Copenhagen: [12.57, 55.68], Stockholm: [18.07, 59.33], Vilnius: [25.28, 54.69], Riga: [24.11, 56.95], Bucharest: [26.10, 44.43],
   Zurich: [8.54, 47.37], Brussels: [4.35, 50.85], Lyon: [4.84, 45.76], Gdansk: [18.65, 54.35], Kyiv: [30.52, 50.45],
   Sofia: [23.32, 42.70], Oslo: [10.75, 59.91], Helsinki: [24.94, 60.17], Lisbon: [-9.14, 38.72], Dublin: [-6.26, 53.35],
+  Wroclaw: [17.04, 51.11], Poznan: [16.93, 52.41], Lviv: [24.03, 49.84], Bratislava: [17.11, 48.15], Belgrade: [20.46, 44.79],
+  Frankfurt: [8.68, 50.11], Cologne: [6.96, 50.94], Marseille: [5.37, 43.30], Venice: [12.33, 45.44], Zagreb: [15.98, 45.81],
+  Athens: [23.73, 37.98], Bordeaux: [-0.58, 44.84], Tallinn: [24.75, 59.44], Minsk: [27.56, 53.90], Istanbul: [28.98, 41.01],
 };
-const ROUTES = [
-  ['Krakow', 'Berlin'], ['Krakow', 'Paris'], ['Krakow', 'London'], ['Krakow', 'Vienna'], ['Krakow', 'Warsaw'], ['Krakow', 'Rome'],
-  ['Krakow', 'Madrid'], ['Krakow', 'Stockholm'], ['Krakow', 'Bucharest'], ['Krakow', 'Amsterdam'], ['Krakow', 'Vilnius'], ['Krakow', 'Milan'],
-  ['Berlin', 'Copenhagen'], ['Paris', 'Barcelona'], ['Vienna', 'Munich'], ['Prague', 'Hamburg'], ['Budapest', 'Sofia'], ['Warsaw', 'Riga'],
+const ROUTES = [ // road / ferry links; Kraków is the hub
+  ['Krakow', 'Warsaw'], ['Krakow', 'Wroclaw'], ['Krakow', 'Vienna'], ['Krakow', 'Budapest'], ['Krakow', 'Lviv'], ['Krakow', 'Prague'],
+  ['Krakow', 'Berlin'], ['Krakow', 'Gdansk'], ['Krakow', 'Bratislava'], ['Krakow', 'Munich'], ['Krakow', 'Frankfurt'],
+  ['Warsaw', 'Vilnius'], ['Warsaw', 'Minsk'], ['Warsaw', 'Poznan'], ['Poznan', 'Berlin'], ['Wroclaw', 'Prague'], ['Lviv', 'Kyiv'],
+  ['Vilnius', 'Riga'], ['Riga', 'Tallinn'], ['Tallinn', 'Helsinki'], ['Gdansk', 'Stockholm'], ['Stockholm', 'Oslo'], ['Copenhagen', 'Stockholm'],
+  ['Berlin', 'Hamburg'], ['Hamburg', 'Copenhagen'], ['Hamburg', 'Amsterdam'], ['Berlin', 'Prague'], ['Prague', 'Munich'], ['Munich', 'Vienna'],
+  ['Munich', 'Zurich'], ['Frankfurt', 'Cologne'], ['Cologne', 'Brussels'], ['Brussels', 'Paris'], ['Amsterdam', 'Brussels'], ['Paris', 'London'],
+  ['London', 'Dublin'], ['Paris', 'Lyon'], ['Paris', 'Bordeaux'], ['Bordeaux', 'Madrid'], ['Madrid', 'Lisbon'], ['Madrid', 'Barcelona'],
+  ['Barcelona', 'Marseille'], ['Marseille', 'Lyon'], ['Lyon', 'Milan'], ['Zurich', 'Milan'], ['Milan', 'Venice'], ['Milan', 'Rome'],
+  ['Venice', 'Zagreb'], ['Vienna', 'Zagreb'], ['Vienna', 'Budapest'], ['Budapest', 'Belgrade'], ['Belgrade', 'Sofia'], ['Sofia', 'Istanbul'],
+  ['Bucharest', 'Sofia'], ['Budapest', 'Bucharest'], ['Sofia', 'Athens'], ['Frankfurt', 'Munich'], ['Vienna', 'Bratislava'],
 ];
 function setupEurope(cfg, rand) {
-  const k = cfg.pxPerDeg, cosL = Math.cos(cfg.center[1] * Math.PI / 180);
-  const proj = ([lon, lat]) => [cfg.at[0] + (lon - cfg.center[0]) * k * cosL, cfg.at[1] - (lat - cfg.center[1]) * k];
+  const k = cfg.pxPerDeg * 180 / Math.PI, merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+  const proj = ([lon, lat]) => [cfg.at[0] + (lon - cfg.center[0]) * cfg.pxPerDeg, cfg.at[1] - (merc(lat) - merc(cfg.center[1])) * k];
   const pts = {}; for (const c in CITIES) pts[c] = proj(CITIES[c]);
-  const routes = ROUTES.map(([a, b], i) => {
+  const routes = ROUTES.map(([a, b]) => {
     const A = pts[a], B = pts[b], mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, len = Math.hypot(B[0] - A[0], B[1] - A[1]);
-    let nx = -(B[1] - A[1]) / len, ny = (B[0] - A[0]) / len; if (ny > 0) { nx = -nx; ny = -ny; } // bend upward
-    const Cc = [mx + nx * len * cfg.arcBend, my + ny * len * cfg.arcBend];
-    const hubRoute = a === 'Krakow';
-    return { A, B, C: Cc, len, hubRoute,
-      speed: len > 380 ? 1 : (rand() < 0.5 ? 1 : 2),   // traversals per loop (integer => seamless)
-      travel: 0.32 + rand() * 0.14, off: rand(), dir: rand() < 0.5 ? 1 : -1 };
+    let nx = -(B[1] - A[1]) / len, ny = (B[0] - A[0]) / len; if (rand() < 0.5) { nx = -nx; ny = -ny; }
+    return { A, B, C: [mx + nx * len * cfg.arcBend, my + ny * len * cfg.arcBend], len };
   });
-  // dot field: only near cities, forming a soft continent silhouette
-  const dots = [];
-  const st = cfg.dotGrid.step, cityP = Object.values(pts);
-  for (let y = st / 2; y < H; y += st) for (let x = st / 2; x < W; x += st) {
-    let v = 0; for (const c of cityP) { const d2 = (x - c[0]) ** 2 + (y - c[1]) ** 2; v = Math.max(v, Math.exp(-d2 / (2 * 70 * 70))); }
-    if (v > 0.08) dots.push([x, y, v]);
+  // vehicles: constant cruise speed; travel = share of the loop spent on the route; speed 1 loop => seamless
+  const V = cfg.vehicles, T = C.seconds, vehicles = [];
+  routes.forEach(r => {
+    const n = rand() < V.extra ? 2 : 1;
+    const travel = clamp(r.len / (V.speed * T), 0.25, 0.95);
+    for (let i = 0; i < n; i++) vehicles.push({ r, travel, off: rand(), dir: rand() < 0.5 ? 1 : -1, k: 0.7 + rand() * 0.3 });
+  });
+  // cities that light up and fade (integer frequency => seamless)
+  const pulses = Object.keys(pts).filter(c => c !== 'Krakow').map(c => ({ c, f: rand() < 0.7 ? 1 : 2, ph: rand(), w: 0.6 + rand() * 0.4 }));
+  // static layers: base dots and fully-lit dots
+  const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return c; };
+  const base = mk(), lit = mk(), light = mk(), tmp = mk(), bctx = base.getContext('2d'), lctx = lit.getContext('2d');
+  const D = window.EUROPE_DOTS || [];
+  for (const [x, y, coast] of D) {
+    bctx.fillStyle = rgba(cfg.dotGrid.color, lerp(cfg.dotGrid.alpha, cfg.dotGrid.coastAlpha, coast) * (0.5 + 0.5 * mask(x, y)));
+    bctx.beginPath(); bctx.arc(x, y, cfg.dotGrid.r, 0, TAU); bctx.fill();
+    lctx.fillStyle = rgba(cfg.lit.color, 1);
+    lctx.beginPath(); lctx.arc(x, y, cfg.lit.r, 0, TAU); lctx.fill();
   }
-  return { pts, routes, dots };
+  return { pts, routes, vehicles, pulses, base, lit, light, tmp };
 }
 const qb = (r, t) => { const u = 1 - t; return [u * u * r.A[0] + 2 * u * t * r.C[0] + t * t * r.B[0], u * u * r.A[1] + 2 * u * t * r.C[1] + t * t * r.B[1]]; };
+function lightBlob(c2, x, y, r, a) {
+  if (a <= 0.004) return;
+  const g = c2.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(0.5, `rgba(255,255,255,${a * 0.45})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+  c2.fillStyle = g; c2.fillRect(x - r, y - r, 2 * r, 2 * r);
+}
 function drawEurope(cfg, st, p) {
-  for (const [x, y, v] of st.dots) { ctx.fillStyle = rgba(cfg.dotGrid.color, cfg.dotGrid.alpha * smooth(0.08, 0.6, v) * (0.3 + 0.7 * mask(x, y))); ctx.fillRect(x - 1, y - 1, 2, 2); }
-  ctx.setLineDash(cfg.dash); ctx.lineWidth = 1.1;
+  ctx.drawImage(st.base, 0, 0);
+  // faint dashed routes
+  ctx.setLineDash(cfg.dash); ctx.lineWidth = 1;
   for (const r of st.routes) {
-    ctx.strokeStyle = rgba(cfg.route, cfg.routeAlpha * (0.35 + 0.65 * mask((r.A[0] + r.B[0]) / 2, (r.A[1] + r.B[1]) / 2)));
+    ctx.strokeStyle = rgba(cfg.route, cfg.routeAlpha * (0.3 + 0.7 * mask((r.A[0] + r.B[0]) / 2, (r.A[1] + r.B[1]) / 2)));
     ctx.beginPath(); ctx.moveTo(r.A[0], r.A[1]); ctx.quadraticCurveTo(r.C[0], r.C[1], r.B[0], r.B[1]); ctx.stroke();
   }
   ctx.setLineDash([]);
-  // impulses
-  for (const r of st.routes) {
-    const u = fract(p * r.speed + r.off); if (u >= r.travel) continue;
-    const s0 = easeInOut(u / r.travel), fade = Math.sin(Math.PI * u / r.travel);
-    const sAt = s => r.dir > 0 ? s : 1 - s;
-    const steps = 14;
-    for (let j = steps; j >= 0; j--) {
-      const s = s0 - j * cfg.pulseTrail / steps; if (s < 0) continue;
-      const [x, y] = qb(r, sAt(s)), a = cfg.pulseAlpha * fade * Math.pow(1 - j / steps, 2) * (0.35 + 0.65 * mask(x, y));
-      ctx.fillStyle = rgba(cfg.pulse, a * 0.6); ctx.beginPath(); ctx.arc(x, y, 1.6, 0, TAU); ctx.fill();
+  // light mask: vehicles (head + fading trail) and pulsing cities light up the map dots under them
+  const L = st.light.getContext('2d'); L.setTransform(1, 0, 0, 1, 0, 0); L.globalCompositeOperation = 'source-over'; L.clearRect(0, 0, W, H);
+  L.globalCompositeOperation = 'lighter';
+  const heads = [];
+  for (const v of st.vehicles) {
+    const u = fract(p - v.off); if (u >= v.travel) continue;
+    const s = u / v.travel, fade = kfTrack(s, [[0, 0], [0.12, 1], [0.88, 1], [1, 0]]) * v.k;
+    const at = q => qb(v.r, v.dir > 0 ? q : 1 - q);
+    const n = cfg.lit.trailSteps, span = cfg.lit.trailPx / v.r.len;
+    for (let j = n; j >= 0; j--) {
+      const q = s - j * span / n; if (q < 0) continue;
+      const [x, y] = at(q), m = 0.35 + 0.65 * mask(x, y), t = 1 - j / n;
+      lightBlob(L, x, y, cfg.lit.head * (0.5 + 0.5 * t), fade * m * Math.pow(t, 1.5) * 0.7);
     }
-    const [x, y] = qb(r, sAt(s0)), a = cfg.pulseAlpha * fade * (0.35 + 0.65 * mask(x, y));
-    glow(x, y, 18, cfg.pulse, a * 0.5);
-    ctx.fillStyle = rgba(cfg.pulse, a); ctx.beginPath(); ctx.arc(x, y, 2.2, 0, TAU); ctx.fill();
+    const [x, y] = at(s); heads.push([x, y, fade * (0.35 + 0.65 * mask(x, y))]);
+  }
+  for (const c of st.pulses) {
+    const g = Math.pow(Math.max(0, Math.sin(TAU * (p * c.f + c.ph))), 4) * c.w;
+    const [x, y] = st.pts[c.c]; c.g = g;
+    lightBlob(L, x, y, cfg.cityPulse.radius, g * cfg.cityPulse.alpha * (0.35 + 0.65 * mask(x, y)));
+  }
+  const [hx, hy] = st.pts.Krakow;
+  lightBlob(L, hx, hy, 70, 0.55 + 0.12 * Math.sin(TAU * p));
+  // lit dots = lit layer masked by light
+  const Tm = st.tmp.getContext('2d'); Tm.globalCompositeOperation = 'source-over'; Tm.clearRect(0, 0, W, H);
+  Tm.drawImage(st.lit, 0, 0); Tm.globalCompositeOperation = 'destination-in'; Tm.drawImage(st.light, 0, 0);
+  ctx.globalAlpha = cfg.lit.alpha; ctx.drawImage(st.tmp, 0, 0); ctx.globalAlpha = 1;
+  // vehicle heads
+  for (const [x, y, a] of heads) {
+    glow(x, y, 14, cfg.vehicles.color, a * 0.45);
+    ctx.fillStyle = rgba(cfg.vehicles.color, a * cfg.vehicles.alpha); ctx.beginPath(); ctx.arc(x, y, 2.1, 0, TAU); ctx.fill();
   }
   // cities
-  for (const c in st.pts) {
-    if (c === 'Krakow') continue;
-    const [x, y] = st.pts[c], m = 0.35 + 0.65 * mask(x, y);
-    ctx.fillStyle = rgba(cfg.cityFill, cfg.cityAlpha * m * 1.4); ctx.strokeStyle = rgba(cfg.city, cfg.cityAlpha * m);
-    ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, cfg.cityR, 0, TAU); ctx.fill(); ctx.stroke();
+  for (const c of st.pulses) {
+    const [x, y] = st.pts[c.c], m = 0.3 + 0.7 * mask(x, y), a = cfg.cityAlpha * m * (0.55 + 0.45 * c.g);
+    ctx.fillStyle = rgba(cfg.cityFill, Math.min(1, a * 1.5)); ctx.strokeStyle = rgba(cfg.city, a);
+    ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(x, y, cfg.cityR, 0, TAU); ctx.fill(); ctx.stroke();
   }
-  // Kraków hub: filled accent node, soft breathing halo, slow expanding rings
-  const [hx, hy] = st.pts.Krakow;
-  glow(hx, hy, 90, cfg.hub, 0.22 + 0.06 * Math.sin(TAU * p));
+  // Kraków hub: filled accent node, soft halo, slow expanding rings
+  glow(hx, hy, 80, cfg.hub, 0.20 + 0.05 * Math.sin(TAU * p));
   for (let i = 0; i < 2; i++) {
     const u = fract(p * cfg.ringPeriod / 2 + i / 2);
     ctx.strokeStyle = rgba(cfg.hub, cfg.ringAlpha * Math.pow(1 - u, 2) * smooth(0, 0.1, u));
     ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(hx, hy, cfg.hubR + cfg.ringMax * easeOut(u), 0, TAU); ctx.stroke();
   }
-  ctx.fillStyle = rgba(cfg.hub, 0.9); ctx.beginPath(); ctx.arc(hx, hy, cfg.hubR * (1 + 0.04 * Math.sin(TAU * p)), 0, TAU); ctx.fill();
+  ctx.fillStyle = rgba(cfg.hub, 0.92); ctx.beginPath(); ctx.arc(hx, hy, cfg.hubR, 0, TAU); ctx.fill();
 }
 
 // ---------- grid horizon ----------
