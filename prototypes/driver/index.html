@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vectrum Driver Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+</head>
+<body>
+<style>
+/* Layout: phone frame with the clickable app on the left, demo controls + change notes for ClickUp on the right. Single dark look, matching the app. */
+:root{
+  color-scheme:dark;
+  --page:#0a0d16; --bg:#05070d; --surface:#111522; --surface2:#191e2e; --line:#242a3c;
+  --fg:#f4f6fb; --muted:#8b91a3; --dim:#5d6377;
+  --accent:#5d6ef5; --accent-soft:rgba(93,110,245,.16); --accent-line:rgba(93,110,245,.45);
+  --ok:#4cd17a; --ok-soft:rgba(76,209,122,.14);
+  --warn:#f2b544; --warn-soft:rgba(242,181,68,.14);
+  --bad:#ef5a5a; --bad-soft:rgba(239,90,90,.15);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--page);color:var(--fg);font-family:var(--font);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{display:flex;gap:32px;justify-content:center;align-items:flex-start;flex-wrap:wrap;max-width:1100px;margin:0 auto}
+
+/* ---------- phone ---------- */
+.phone{width:390px;max-width:100%;height:844px;border-radius:52px;background:var(--bg);position:relative;overflow:hidden;
+  box-shadow:0 0 0 10px #1b1f2b,0 0 0 11px #2b3040,0 30px 80px rgba(0,0,0,.6);flex:none;margin:11px}
+@media (max-width:520px){.phone{height:min(844px,calc(100svh - 48px));border-radius:36px;margin:6px;box-shadow:0 0 0 6px #1b1f2b}}
+.statusbar{position:absolute;inset:0 0 auto;height:50px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 44px;font-weight:600;font-size:16px;z-index:5;pointer-events:none}
+.statusbar .ic{display:flex;gap:6px;align-items:center}
+.content{position:absolute;inset:0;overflow-y:auto;padding:60px 16px 130px;scrollbar-width:none}
+.content::-webkit-scrollbar{display:none}
+.content.noTab{padding-bottom:120px}
+.content.full{padding-bottom:24px}
+
+h1.big{font-size:34px;font-weight:800;letter-spacing:-.5px;margin:18px 4px 18px}
+.topbar{display:flex;align-items:center;justify-content:center;position:relative;height:52px;margin-bottom:10px}
+.topbar h2{font-size:17px;font-weight:700;margin:0}
+.topbar .right{position:absolute;right:0}
+.topbar .left{position:absolute;left:0}
+.roundbtn{width:46px;height:46px;border-radius:50%;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent)}
+.roundbtn.plain{color:var(--fg)}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border-radius:999px;padding:7px 13px;font-size:13px;color:var(--muted);font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.dot.off{background:var(--dim)}
+.dot.warn{background:var(--warn)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.sect{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 4px 0;display:flex;align-items:center;gap:6px}
+.row{display:flex;align-items:center;gap:12px}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.xs{font-size:12px}
+.b{font-weight:700}
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.divider{height:1px;background:var(--line);margin:12px 0}
+
+.avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(145deg,#26305e,#1a1f3a);display:grid;place-items:center;font-weight:800;font-size:16px;position:relative;flex:none;border:1px solid #2d3561}
+.avatar.lg{width:76px;height:76px;font-size:26px}
+.avatar.xl{width:112px;height:112px;font-size:38px}
+.avatar .st{position:absolute;right:0;bottom:0;width:13px;height:13px;border-radius:50%;background:var(--ok);border:2.5px solid var(--surface)}
+.avatar .st.off{background:var(--dim)}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:16px;font-weight:700;font-size:16px;width:100%}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary[disabled]{opacity:.4;cursor:default}
+.btn.ghost{background:var(--surface2);border:1px solid var(--line)}
+.btn.danger{background:var(--bad);color:#fff}
+.btn.ok{background:var(--ok);color:#06210f}
+.btn.outline{border:1px solid var(--accent-line);color:var(--accent);background:var(--accent-soft)}
+.btn.sm{height:42px;font-size:14px;border-radius:13px}
+.btnrow{display:flex;gap:10px}
+
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chip.dim{background:var(--surface2);color:var(--muted)}
+
+/* tab bar */
+.tabbar{position:absolute;left:14px;right:14px;bottom:22px;height:72px;border-radius:36px;background:rgba(36,40,54,.92);backdrop-filter:blur(14px);border:1px solid #343a4e;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;z-index:6}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;border-radius:30px;color:#e8eaf2;position:relative}
+.tab.on{background:#0e1220;color:var(--accent)}
+.tab .badge{position:absolute;top:6px;right:calc(50% - 22px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px}
+
+/* list rows */
+.listrow{display:flex;align-items:center;gap:12px;padding:12px 4px;width:100%}
+.listrow + .listrow{border-top:1px solid var(--line)}
+.pinned{background:linear-gradient(180deg,rgba(93,110,245,.10),rgba(93,110,245,.03));border:1px solid var(--accent-line);border-radius:20px;padding:14px}
+
+/* toggle */
+.tgl{width:62px;height:36px;border-radius:18px;background:#3a3f50;position:relative;flex:none}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:30px;height:30px;border-radius:50%;background:#fff;transition:left .2s}
+.tgl.on{background:var(--accent)}
+.tgl.on::after{left:29px}
+
+/* flow */
+.flowhead{display:flex;align-items:center;justify-content:space-between;height:52px}
+.flowhead h2{font-size:17px;margin:0}
+.progress{display:flex;gap:6px;margin:6px 2px 20px}
+.progress i{flex:1;height:4px;border-radius:2px;background:var(--surface2)}
+.progress i.on{background:var(--accent)}
+.q{font-size:26px;font-weight:800;letter-spacing:-.3px;margin:0 2px 6px;text-wrap:balance}
+.qsub{color:var(--muted);margin:0 2px 20px;font-size:15px;line-height:1.4}
+.option{display:flex;align-items:center;gap:14px;width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:20px;padding:16px;text-align:left}
+.option.sel{border-color:var(--accent);background:var(--accent-soft)}
+.option .oi{width:52px;height:52px;border-radius:15px;background:var(--surface2);display:grid;place-items:center;color:var(--accent);flex:none}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;aspect-ratio:1/1.02;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;font-size:13px;font-weight:600;text-align:center;padding:8px;max-width:100%}
+.tile svg{color:var(--accent)}
+.tile.sel{border-color:var(--accent);background:var(--accent-soft)}
+.sev{display:flex;gap:14px;align-items:flex-start;width:100%;border-radius:20px;padding:16px;border:1.5px solid var(--line);background:var(--surface);text-align:left}
+.sev .sw{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none}
+.bottomcta{position:absolute;left:0;right:0;bottom:0;padding:14px 16px 30px;background:linear-gradient(180deg,rgba(5,7,13,0),var(--bg) 30%);z-index:4;display:flex;flex-direction:column;gap:10px}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ph{aspect-ratio:1;border-radius:16px;overflow:hidden;position:relative;background:var(--surface2);max-width:100%}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.65);display:grid;place-items:center}
+.addph{aspect-ratio:1;border-radius:16px;border:1.5px dashed var(--accent-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--accent);font-size:12px;font-weight:700;background:var(--accent-soft);cursor:pointer;max-width:100%}
+textarea{width:100%;min-height:92px;resize:none;background:var(--surface);border:1px solid var(--line);border-radius:16px;color:var(--fg);font:inherit;font-size:15px;padding:14px}
+textarea::placeholder,input::placeholder{color:var(--dim)}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:9px 12px;font-size:14px;align-items:center}
+.meta svg{color:var(--muted)}
+.voice{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 12px;width:100%}
+.voice .mic{width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.voice.rec .mic{background:var(--bad);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(239,90,90,.18)}}
+.wave{display:flex;gap:3px;align-items:center;height:22px}
+.wave i{width:3px;border-radius:2px;background:var(--accent)}
+
+/* timeline */
+.tl{display:flex;flex-direction:column}
+.tl .st{display:flex;gap:12px;position:relative;padding-bottom:16px}
+.tl .st:last-child{padding-bottom:0}
+.tl .st::before{content:"";position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--line)}
+.tl .st:last-child::before{display:none}
+.tl .st.done::before{background:var(--accent)}
+.tl .bul{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:var(--bg);flex:none;display:grid;place-items:center;z-index:1}
+.tl .done .bul{background:var(--accent);border-color:var(--accent)}
+.tl .cur .bul{border-color:var(--accent)}
+.tl .cur .bul::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+/* chat */
+.msgs{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:80%;padding:10px 13px;border-radius:18px;font-size:15px;line-height:1.35}
+.bub.them{background:var(--surface2);align-self:flex-start;border-bottom-left-radius:6px}
+.bub.me{background:var(--accent);align-self:flex-end;border-bottom-right-radius:6px;color:#fff}
+.bub .t{display:block;font-size:11px;opacity:.6;margin-top:3px;text-align:right}
+.repcard{align-self:flex-end;width:82%;background:var(--surface);border:1px solid var(--accent-line);border-radius:18px;padding:12px;text-align:left}
+.sysline{align-self:center;font-size:12px;color:var(--muted);padding:4px 0}
+.composer{position:absolute;left:0;right:0;bottom:0;padding:10px 12px 28px;background:var(--bg);border-top:1px solid var(--line);z-index:4;display:flex;flex-direction:column;gap:8px}
+.composer .in{display:flex;gap:8px;align-items:center}
+.composer input{flex:1;min-width:0;height:44px;border-radius:22px;background:var(--surface2);border:1px solid var(--line);color:var(--fg);padding:0 16px;font:inherit;font-size:15px}
+.qchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.qchip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+
+/* search */
+.search{height:50px;border-radius:25px;background:var(--surface2);display:flex;align-items:center;gap:10px;padding:0 18px;color:var(--muted);margin-bottom:14px}
+
+/* call */
+.callscr{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 20%,#1e2552 0%,#090b16 65%);display:flex;flex-direction:column;align-items:center;padding:120px 24px 60px;z-index:8}
+.callbtns{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:28px;width:100%;max-width:300px;justify-items:center}
+.cb{width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.cb.on{background:#fff;color:#0a0d16}
+.cb.end{background:var(--bad)}
+.cbl{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+
+/* sheet & toast */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:9;display:flex;align-items:flex-end}
+.sheet{width:100%;background:var(--surface);border-radius:28px 28px 0 0;padding:22px 18px 34px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.toast{position:absolute;top:56px;left:14px;right:14px;z-index:10;background:#232942;border:1px solid var(--accent-line);border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:center;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:drop .3s ease}
+@keyframes drop{from{transform:translateY(-14px);opacity:0}}
+.offbar{background:var(--warn-soft);color:var(--warn);border-radius:14px;padding:10px 12px;font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stats .k{font-size:13px;color:var(--muted)}
+.stats .v{font-size:16px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.links{display:flex;flex-direction:column;align-items:center;gap:22px;padding:18px 0 8px;color:var(--accent);font-size:16px}
+.links .del{color:var(--bad)}
+.stop{display:flex;gap:12px}
+.stop .pt{width:14px;display:flex;flex-direction:column;align-items:center}
+.stop .pt i{width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);background:var(--bg)}
+.stop .pt i.done{background:var(--accent)}
+.stop .pt b{flex:1;width:2px;background:var(--line);margin:3px 0}
+.qa{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qa button{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;font-weight:600;text-align:center}
+.qa .ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.qa .ico.w{background:var(--warn-soft);color:var(--warn)}
+
+/* ---------- side panel ---------- */
+.panel{flex:1;min-width:0;max-width:440px;display:flex;flex-direction:column;gap:18px;padding-top:10px}
+.panel h1{font-size:24px;margin:0;letter-spacing:-.3px}
+.panel p{margin:0;color:var(--muted);line-height:1.5;font-size:14px}
+.pbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.pbox h3{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ctl{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px}
+.seg{display:flex;background:var(--surface2);border-radius:10px;padding:3px}
+.seg button{padding:6px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--accent);color:#fff}
+.scen{display:flex;flex-direction:column;gap:6px}
+.scen button{background:var(--surface2);border-radius:12px;padding:10px 12px;font-size:14px;display:flex;justify-content:space-between;gap:10px}
+.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.45}
+.notes li::marker{color:var(--accent)}
+.notes b{color:var(--fg)}
+.where{font-size:13px;color:var(--accent);font-weight:700}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="phone" id="phone"></div>
+  <aside class="panel" id="panel"></aside>
+</div>
+<input type="file" id="photoInput" accept="image/*" capture="environment" multiple hidden>
+
+<script>
+/* ---------------- icons ---------------- */
+const P={
+ route:'<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/>',
+ chat:'<path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.5L3 21l2-5.3A8.5 8.5 0 1 1 21 11.5z"/>',
+ phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ back:'<path d="M15 18l-6-6 6-6"/>', close:'<path d="M18 6L6 18M6 6l12 12"/>', chev:'<path d="M9 18l6-6-6-6"/>',
+ edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+ refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+ pin:'<path d="M12 17v5"/><path d="M9 3h6l-1 7 4 3v2H6v-2l4-3z"/>',
+ wrench:'<path d="M14.7 6.3a4 4 0 0 0 5 5L22 14l-8 8-2.3-2.3a4 4 0 0 0-5-5L2 10l8-8z" transform="scale(.9) translate(1.3 1.3)"/>',
+ alert:'<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+ truck:'<path d="M1 4h13v12H1zM14 8h4l3 4v4h-7z"/><circle cx="5.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/>',
+ trailer:'<path d="M2 5h16v10H2zM18 13h4"/><circle cx="7" cy="18" r="2"/><circle cx="12" cy="18" r="2"/>',
+ box:'<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+ tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21"/>',
+ brake:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M5 5l2.5 2.5"/>',
+ engine:'<path d="M4 9h3l2-3h5l2 3h2v3h2v-2h1v6h-1v-2h-2v3h-3l-2 2H8l-2-2H4z"/>',
+ bulb:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+ drop:'<path d="M12 2.7l5.7 5.6a8 8 0 1 1-11.4 0z"/>',
+ gauge:'<path d="M12 14l4-4"/><path d="M3.3 19a10 10 0 1 1 17.4 0"/>',
+ link:'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+ door:'<path d="M3 21h18M5 21V3h14v18"/><path d="M15 12h.01"/>',
+ snow:'<path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1L19.1 4.9"/>',
+ dots:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+ seal:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ shift:'<path d="M5 9l-3 3 3 3M19 9l3 3-3 3M2 12h20"/>',
+ thermo:'<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/>',
+ camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+ image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+ mic:'<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 17v5"/>',
+ stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',
+ loc:'<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ odo:'<circle cx="12" cy="12" r="9"/><path d="M12 12l4-3M7 15h10"/>',
+ check:'<path d="M20 6L9 17l-5-5"/>',
+ send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+ nav:'<path d="M3 11l19-9-9 19-2-8z"/>',
+ building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>',
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+ wifioff:'<path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2.5-1.7M2 8.8a15 15 0 0 1 4.2-2.7M22 8.8a15 15 0 0 0-11.3-3.8M12 20h.01"/>',
+ hand:'<path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0"/>',
+ micoff:'<path d="M2 2l20 20M9 9v1a3 3 0 0 0 5.1 2.1M15 9.3V5a3 3 0 0 0-5.9-.7M19 10a7 7 0 0 1-1.2 3.9M5 10a7 7 0 0 0 10.4 6.1M12 17v5"/>',
+ speaker:'<path d="M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+ sim:'<path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><rect x="8" y="11" width="8" height="7" rx="1"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>'
+};
+const ic=(n,s=22,w=2)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||''}</svg>`;
+const icf=(n,s=26)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------------- data ---------------- */
+const LOGIST={id:'olena',name:'Olena Koval',ini:'OK',role:'Your logist',phone:'+48 22 431 18 07',hours:'On shift until 18:00'};
+const DUTY={id:'marek',name:'Marek Nowak',ini:'MN',role:'Duty dispatcher',phone:'+48 22 431 18 00',hours:'Night duty · 24/7 line'};
+const UNITS={
+ tractor:{name:'Tractor',plate:'WE 7102T',model:'Volvo FH',icon:'truck'},
+ trailer:{name:'Trailer',plate:'WX 4410P',model:'Schmitz Cargobull S.KO',icon:'trailer'},
+ cargo:{name:'Cargo',plate:'Load on R-2318',model:'22 pallets · Łódź → Poznań',icon:'box'}
+};
+const CATS={
+ tractor:[['tyres','Tyres','tire'],['brakes','Brakes','brake'],['engine','Engine','engine'],['lights','Lights','bulb'],['electrics','Electrics','bolt'],['leak','Leak','drop'],['warning','Dashboard warning','gauge'],['other','Other','dots']],
+ trailer:[['tyres','Tyres','tire'],['brakes','Brakes','brake'],['lights','Lights','bulb'],['coupling','Coupling','link'],['body','Body & doors','door'],['reefer','Reefer unit','snow'],['other','Other','dots']],
+ cargo:[['damaged','Damaged goods','box'],['shifted','Load shifted','shift'],['seal','Seal broken','seal'],['temp','Temperature','thermo'],['other','Other','dots']]
+};
+const SEV={
+ low:{t:'I can keep driving',d:'Minor issue. Check it at the next planned stop.',c:'ok',col:'var(--ok)',bg:'var(--ok-soft)',ico:'check'},
+ mid:{t:'I can reach a service',d:'Needs attention soon. I can drive carefully to the nearest service.',c:'warn',col:'var(--warn)',bg:'var(--warn-soft)',ico:'alert'},
+ high:{t:'I can’t continue',d:'Vehicle is unsafe or stopped. I need help now.',c:'bad',col:'var(--bad)',bg:'var(--bad-soft)',ico:'hand'}
+};
+const STATUSES=[['queued','Waiting for network'],['sent','Sent'],['seen','Seen by logist'],['work','In progress'],['resolved','Resolved']];
+const stLabel=s=>(STATUSES.find(x=>x[0]===s)||[])[1];
+const stChip=s=>({queued:'warn',sent:'acc',seen:'acc',work:'warn',resolved:'ok'}[s]);
+
+const S={
+ tab:'profile', stack:[], online:true, onShift:true, moving:false,
+ draft:null, sheet:null, toast:null, nextId:1042, recording:false, recSec:0,
+ call:null, unreadChat:0,
+ reports:[{id:1037,unit:'tractor',cat:'Dashboard warning',sev:'low',status:'resolved',photos:[],note:'Mirror heater warning on the left side.',date:'12 Oct',time:'09:14',voice:0,log:{queued:null,sent:'12 Oct 09:14',seen:'12 Oct 09:20',work:'12 Oct 10:02',resolved:'14 Oct 16:40'}}],
+ msgs:{olena:[{from:'them',text:'Morning! Route R-2318 is in your Routes tab. Loading in Łódź at 14:40.',time:'08:12'}],marek:[]},
+ calls:[]
+};
+const contact=()=>S.onShift?LOGIST:DUTY;
+const now=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const topV=()=>S.stack[S.stack.length-1]||null;
+
+/* ---------------- demo photo ---------------- */
+function demoPhoto(i){
+  const c=document.createElement('canvas');c.width=c.height=360;const x=c.getContext('2d');
+  const hues=[[38,32,28],[26,30,40],[40,36,30]][i%3];
+  const g=x.createLinearGradient(0,0,360,360);g.addColorStop(0,`rgb(${hues[0]*2.4},${hues[1]*2.4},${hues[2]*2.4})`);g.addColorStop(1,'#0b0c10');
+  x.fillStyle=g;x.fillRect(0,0,360,360);
+  x.fillStyle='#16171b';x.beginPath();x.arc(180+(i%2?30:-20),190,130,0,7);x.fill();
+  x.strokeStyle='#2a2c33';x.lineWidth=14;for(let k=0;k<26;k++){const a=k/26*Math.PI*2;x.beginPath();x.moveTo(180+(i%2?30:-20)+Math.cos(a)*100,190+Math.sin(a)*100);x.lineTo(180+(i%2?30:-20)+Math.cos(a)*126,190+Math.sin(a)*126);x.stroke();}
+  x.fillStyle='#5c5f68';x.beginPath();x.arc(180+(i%2?30:-20),190,58,0,7);x.fill();
+  x.fillStyle='#3b3e46';x.beginPath();x.arc(180+(i%2?30:-20),190,22,0,7);x.fill();
+  x.strokeStyle='#e9b04a';x.lineWidth=4;x.beginPath();x.moveTo(90,120);x.lineTo(130,150);x.lineTo(118,175);x.lineTo(150,205);x.stroke();
+  x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,322,360,38);x.fillStyle='#fff';x.font='600 17px sans-serif';x.fillText('WE 7102T · '+now()+' · A2 km 341',12,347);
+  return c.toDataURL('image/jpeg',.8);
+}
+
+/* ---------------- shared bits ---------------- */
+const statusBar=()=>`<div class="statusbar"><span>22:25</span><span class="ic">${S.online?`<svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" opacity=".35"/></svg>`:`<span style="font-size:12px;color:var(--warn)">No signal</span>`}<svg width="26" height="13" viewBox="0 0 26 13"><rect x=".5" y=".5" width="22" height="12" rx="3.5" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="13" height="9" rx="2" fill="#fff"/><rect x="23.5" y="4" width="2" height="5" rx="1" fill="#fff" opacity=".5"/></svg></span></div>`;
+const tabbar=()=>{const t=[['routes','Routes','route'],['chat','Chat','chat'],['calls','Calls','phone'],['profile','Profile','user']];
+ return `<nav class="tabbar">${t.map(([k,l,i])=>`<button class="tab ${S.tab===k?'on':''}" data-act="tab:${k}">${k==='chat'&&S.unreadChat?`<span class="badge">${S.unreadChat}</span>`:''}${k==='chat'||k==='phone'||k==='calls'?icf(i,24):k==='user'||k==='profile'?icf('user',24):ic(i,24,2.4)}<span>${l}</span></button>`).join('')}</nav>`};
+const avatar=(c,cls='',status=true)=>`<div class="avatar ${cls}">${c.ini}${status?`<span class="st ${c===LOGIST&&!S.onShift?'off':''}"></span>`:''}</div>`;
+const live=()=>S.online?`<span class="pill"><span class="dot"></span>Live</span>`:`<span class="pill" style="color:var(--warn)"><span class="dot warn"></span>Offline · will sync</span>`;
+const openReports=()=>S.reports.filter(r=>r.status!=='resolved');
+
+/* pinned logist block reused in Chat / Calls / Routes / Profile */
+function logistOffNote(){return S.onShift?'':`<div class="row small" style="margin-top:10px;gap:8px;color:var(--muted)">${ic('moon',16)}<span class="grow">Olena is off shift until 08:00. Urgent issues go to the duty dispatcher.</span></div>`}
+
+/* ---------------- tab screens ---------------- */
+function routesView(){
+ const op=openReports()[0];
+ return `<h1 class="big">Routes</h1>
+ <div class="stack">
+  ${op?reportBanner(op):''}
+  <div class="card">
+   <div class="row" style="margin-bottom:14px"><div class="grow"><div class="xs muted b" style="letter-spacing:.06em">ACTIVE · R-2318</div><div class="b" style="font-size:19px;margin-top:3px">Warsaw → Poznań</div></div><span class="chip acc">En route</span></div>
+   ${[['Warsaw DC, Pruszków','Loaded · 07:40',1],['Łódź Hub, Stryków','Unload & load · ETA 14:40',0],['Poznań Logistics Park','Delivery · ETA 18:55',0]].map((s,i,a)=>`<div class="stop"><div class="pt"><i class="${s[2]?'done':''}"></i>${i<a.length-1?'<b></b>':''}</div><div style="padding-bottom:${i<a.length-1?14:0}px"><div class="b">${s[0]}</div><div class="small muted">${s[1]}</div></div></div>`).join('')}
+  </div>
+  <div class="qa">
+   <button data-act="report"><span class="ico w">${ic('alert',22)}</span>Report issue</button>
+   <button data-act="startcall"><span class="ico">${ic('phone',22)}</span>Call ${S.onShift?'logist':'duty'}</button>
+   <button data-act="thread"><span class="ico">${ic('chat',22)}</span>Message</button>
+  </div>
+  <div class="card row" style="padding:14px">
+   ${avatar(contact())}
+   <div class="grow"><div class="b">${contact().name}</div><div class="small muted">${contact().role} · ${contact().hours}</div></div>
+  </div>
+ </div>`;
+}
+function reportBanner(r){const s=SEV[r.sev];return `<button class="card row" style="width:100%;border-color:${s.col};background:${s.bg}" data-act="detail:${r.id}">
+  <span style="color:${s.col}">${ic('wrench',24)}</span><div class="grow"><div class="b">Issue #${r.id} · ${esc(r.cat)}</div><div class="small muted">${UNITS[r.unit].plate} · ${stLabel(r.status)}</div></div>${ic('chev',18)}</button>`}
+
+function chatView(){
+ const c=contact(); const th=S.msgs[c.id]; const last=th[th.length-1];
+ const prev=last?(last.type==='report'?`Issue #${last.id} · ${last.cat}`:last.text):'Say hi or send a vehicle report';
+ const other=S.onShift?'':`<button class="listrow" data-act="thread:olena">${avatar(LOGIST,'',true)}<div class="grow"><div class="b">Olena Koval</div><div class="small muted ellipsis">${esc((S.msgs.olena.slice(-1)[0]||{}).text||'')}</div></div></button>`;
+ return `<div class="topbar"><h2>Team chat</h2><button class="roundbtn right" aria-label="New chat">${ic('edit',22)}</button></div>
+ <div class="search">${ic('search',22)}<span style="font-size:17px">Search conversations</span></div>
+ <div style="margin-bottom:14px">${live()}</div>
+ <div class="sect">${ic('pin',14)} Pinned</div>
+ <button class="pinned row" style="width:100%;margin-top:8px" data-act="thread">
+  ${avatar(c)}
+  <div class="grow"><div class="row" style="gap:6px"><span class="b grow ellipsis">${c.name}</span><span class="xs muted">${last?last.time:''}</span></div>
+   <div class="small" style="color:var(--accent);font-weight:600">${c.role}${S.onShift?' · R-2318':''}</div>
+   <div class="small muted ellipsis" style="margin-top:2px">${esc(prev)}</div></div>
+  ${S.unreadChat?`<span class="chip" style="background:var(--accent);color:#fff">${S.unreadChat}</span>`:''}
+ </button>
+ ${logistOffNote()}
+ <div class="sect" style="margin-top:22px">Conversations</div>
+ ${other||`<div class="small muted" style="padding:12px 4px;line-height:1.5">Other chats you start with dispatch will appear here.</div>`}`;
+}
+
+function callsView(){
+ const c=contact();
+ return `<div class="topbar"><h2>Calls</h2><button class="roundbtn right" aria-label="Refresh">${ic('refresh',22)}</button></div>
+ <div style="margin-bottom:16px">${live()}</div>
+ <div class="sect">${ic('pin',14)} Pinned</div>
+ <div class="pinned" style="margin-top:8px">
+  <div class="row">${avatar(c,'lg')}<div class="grow"><div class="b" style="font-size:18px">${c.name}</div><div class="small" style="color:var(--accent);font-weight:600">${c.role}</div><div class="small muted">${c.hours}</div></div></div>
+  <div class="btnrow" style="margin-top:14px">
+   <button class="btn primary sm" data-act="startcall">${ic('phone',18)} App call</button>
+   <button class="btn outline sm" data-act="gsm">${ic('sim',18)} Phone line</button>
+  </div>
+  <div class="small muted" style="margin-top:10px;text-align:center">Phone line: <span style="user-select:all;color:var(--fg)">${c.phone}</span> · works without internet</div>
+ </div>
+ ${logistOffNote()}
+ <div class="sect" style="margin-top:22px">Recent</div>
+ ${S.calls.length?`<div class="card" style="padding:4px 14px;margin-top:8px">${S.calls.map(k=>`<div class="listrow"><span style="color:${k.missed?'var(--bad)':'var(--ok)'}">${ic('phone',18)}</span><div class="grow"><div class="b">${k.name}</div><div class="small muted">Outgoing · ${k.dur}</div></div><span class="small muted">${k.time}</span></div>`).join('')}</div>`
+ :`<div class="small muted" style="padding:12px 4px;line-height:1.5">Your incoming, outgoing and missed calls will appear here.</div>`}`;
+}
+
+function profileView(){
+ const r=S.reports;
+ return `<h1 class="big">Profile</h1>
+ <div class="stack">
+  <div class="card row" style="padding:18px">
+   <div class="avatar lg" style="border-color:#2d3561">VC</div>
+   <div class="grow"><div class="b" style="font-size:20px">Vladyslav Chub</div><div class="muted ellipsis">shulzzv@gmail.com</div><div class="small row" style="gap:6px;color:var(--accent);margin-top:3px">${ic('building',16)}Vectrum Space</div></div>
+   <span class="roundbtn" style="width:40px;height:40px;background:var(--accent);color:#fff;border:0">${ic('camera',18)}</span>
+  </div>
+
+  <div class="card">
+   <div class="row" style="margin-bottom:14px">${icf('truck',26)}<span class="b grow" style="font-size:18px">Assigned composition</span></div>
+   ${['tractor','trailer'].map(u=>`<div class="row" style="padding:6px 0"><span style="color:var(--accent)">${ic(UNITS[u].icon,26)}</span><div class="grow"><div class="b">${UNITS[u].plate}</div><div class="small muted">${UNITS[u].model}</div></div><span class="xs muted">${UNITS[u].name}</span></div>`).join('')}
+   <div class="divider"></div>
+   <div class="stats"><div><div class="k">Length</div><div class="v">16,5 m</div></div><div><div class="k">Gross</div><div class="v">40,0 t</div></div><div><div class="k">Axles</div><div class="v">5</div></div><div><div class="k">Load</div><div class="v">0%</div></div></div>
+   <div class="bar" style="margin-top:12px"><i style="width:2%"></i></div>
+   <div class="xs muted" style="margin-top:6px">Load: 0 of 24 t · updates at loading</div>
+   <button class="btn outline" style="margin-top:16px" data-act="report">${ic('alert',20)} Report an issue</button>
+   ${r.length?`<div class="sect" style="margin:18px 0 4px">Reports for this composition</div>${r.map(x=>`<button class="listrow" data-act="detail:${x.id}"><span class="dot" style="background:${SEV[x.sev].col}"></span><div class="grow"><div class="b ellipsis">#${x.id} · ${esc(x.cat)}</div><div class="small muted">${UNITS[x.unit].plate} · ${x.date}</div></div><span class="chip ${stChip(x.status)}">${stLabel(x.status)}</span></button>`).join('')}`:''}
+  </div>
+
+  <button class="card row" style="width:100%" data-act="thread">${avatar(contact())}<div class="grow"><div class="xs muted b" style="letter-spacing:.06em">${S.onShift?'YOUR LOGIST':'DUTY DISPATCHER'}</div><div class="b">${contact().name}</div><div class="small muted">${contact().hours}</div></div>${ic('chev',18)}</button>
+
+  <div class="card">
+   <div class="row" style="align-items:flex-start"><span style="color:var(--accent);margin-top:2px">${icf('nav',22)}</span><div class="grow"><div class="b" style="font-size:17px">Live location</div><div class="small muted" style="line-height:1.4;margin-top:3px">Share your phone’s GPS when the vehicle has no tracker. Works in the background.</div></div><button class="tgl" data-act="noop" aria-label="Live location"></button></div>
+   <div class="divider"></div>
+   <div class="row" style="align-items:flex-start"><span style="color:var(--accent);margin-top:2px">${icf('bell',22)}</span><div class="grow"><div class="b" style="font-size:17px">Notifications</div><div class="small muted" style="margin-top:3px">Assignments, chat, route changes and report updates</div></div><button class="tgl on" data-act="noop" aria-label="Notifications"></button></div>
+   <div class="divider"></div>
+   <div class="row"><span style="color:var(--accent)">${ic('sun',22)}</span><div class="grow b" style="font-size:17px">Appearance</div><span class="muted">System</span>${ic('chev',18)}</div>
+  </div>
+
+  <div class="links"><span>Privacy Policy</span><span>Terms of Use</span><span class="del">Account &amp; data deletion</span></div>
+ </div>`;
+}
+
+/* ---------------- report flow ---------------- */
+function flowShell(step,title,body,cta=''){
+ return `<div class="flowhead"><button class="roundbtn plain" data-act="${step===1?'discard':'back'}" aria-label="Back">${ic(step===1?'close':'back',22)}</button><h2>Report an issue</h2><button class="roundbtn plain" data-act="discard" aria-label="Close" ${step===1?'style="visibility:hidden"':''}>${ic('close',20)}</button></div>
+ <div class="progress">${[1,2,3,4,5].map(i=>`<i class="${i<=step?'on':''}"></i>`).join('')}</div>
+ <div class="xs muted b" style="margin:0 2px 6px;letter-spacing:.06em">STEP ${step} OF 5</div>
+ <h3 class="q">${title}</h3>${body}${cta?`<div class="bottomcta">${cta}</div>`:''}`;
+}
+function rUnit(){const d=S.draft;
+ return flowShell(1,'What has the problem?',`<p class="qsub">Your assigned composition is already selected.</p><div class="stack">${Object.entries(UNITS).map(([k,u])=>`<button class="option ${d.unit===k?'sel':''}" data-act="unit:${k}"><span class="oi">${ic(u.icon,28)}</span><div class="grow"><div class="b" style="font-size:17px">${u.name}</div><div class="small muted">${u.plate} · ${u.model}</div></div>${ic('chev',18)}</button>`).join('')}</div>`);}
+function rCat(){const d=S.draft;
+ return flowShell(2,'What’s wrong?',`<p class="qsub">${UNITS[d.unit].name} · ${UNITS[d.unit].plate}</p><div class="grid3">${CATS[d.unit].map(([k,l,i])=>`<button class="tile ${d.catKey===k?'sel':''}" data-act="cat:${k}">${ic(i,30)}<span>${l}</span></button>`).join('')}</div>`);}
+function rSev(){const d=S.draft;
+ return flowShell(3,'Can you keep driving?',`<p class="qsub">This tells ${contact().name.split(' ')[0]} how fast to react.</p><div class="stack">${Object.entries(SEV).map(([k,s])=>`<button class="sev" style="${d.sev===k?`border-color:${s.col};background:${s.bg}`:''}" data-act="sev:${k}"><span class="sw" style="background:${s.bg};color:${s.col}">${ic(s.ico,22,2.4)}</span><div class="grow"><div class="b" style="font-size:17px">${s.t}</div><div class="small muted" style="line-height:1.4;margin-top:3px">${s.d}</div></div></button>`).join('')}</div>`);}
+function rDet(){const d=S.draft;
+ const wave=Array.from({length:22},(_,i)=>`<i style="height:${6+Math.abs(Math.sin(i*1.7))*16}px"></i>`).join('');
+ return flowShell(4,'Show what happened',`<p class="qsub">Photos help your logist decide faster. Add up to 6.</p>
+  <div class="photos">${d.photos.map((p,i)=>`<div class="ph"><img src="${p}" alt="Photo ${i+1}"><button class="x" data-act="rmph:${i}" aria-label="Remove photo">${ic('close',14,2.6)}</button></div>`).join('')}
+   ${d.photos.length<6?`<label class="addph" for="photoInput" tabindex="0">${ic('camera',26)}Take photo</label>${d.photos.length<5?`<button class="addph" style="border-style:solid;background:var(--surface);color:var(--muted)" data-act="demoph">${ic('image',24)}Demo photo</button>`:''}`:''}
+  </div>
+  <div class="sect" style="margin:22px 2px 8px">Describe it</div>
+  ${d.voice&&!S.recording?`<div class="voice"><span class="mic">${ic('mic',18)}</span><div class="wave grow">${wave}</div><span class="small muted">0:${String(d.voice).padStart(2,'0')}</span><button data-act="rmvoice" class="muted" aria-label="Delete voice note">${ic('close',18)}</button></div>`
+  :`<button class="voice ${S.recording?'rec':''}" data-act="voice"><span class="mic">${ic(S.recording?'stop':'mic',18)}</span><div class="grow"><div class="b">${S.recording?'Recording… tap to stop':'Tap to record a voice note'}</div><div class="small muted">${S.recording?'<span id="recT">0:00</span>':'Instead of typing, up to 60 s'}</div></div></button>`}
+  <textarea id="note" data-in="note" placeholder="Or type a few words (optional)" style="margin-top:10px">${esc(d.note)}</textarea>
+  <div class="sect" style="margin:20px 2px 8px">Added automatically</div>
+  <div class="card meta">${ic('loc',18)}<span>A2, km 341 · near Konin</span>${ic('clock',18)}<span>Today, ${now()}</span>${ic('route',18)}<span>Route R-2318 · Warsaw → Poznań</span>${ic('odo',18)}<span>Odometer 412 870 km</span></div>
+  <div style="height:90px"></div>`,
+  `<button class="btn primary" data-act="toreview">Continue</button>${!d.photos.length&&!d.note&&!d.voice?'<div class="xs muted" style="text-align:center">You can send without photos, but they help.</div>':''}`);}
+function rRev(){const d=S.draft;const s=SEV[d.sev];const c=contact();
+ return flowShell(5,'Check and send',`<p class="qsub">Goes to ${c.name} (${c.role.toLowerCase()}) and appears in your chat.</p>
+  <div class="card stack" style="gap:12px">
+   <button class="row" data-act="jump:r-unit"><span style="color:var(--accent)">${ic(UNITS[d.unit].icon,24)}</span><div class="grow"><div class="xs muted">Unit</div><div class="b">${UNITS[d.unit].name} · ${UNITS[d.unit].plate}</div></div><span class="small" style="color:var(--accent)">Edit</span></button>
+   <div class="divider" style="margin:0"></div>
+   <button class="row" data-act="jump:r-cat"><span style="color:var(--accent)">${ic(CATS[d.unit].find(x=>x[0]===d.catKey)[2],24)}</span><div class="grow"><div class="xs muted">Issue</div><div class="b">${d.cat}</div></div><span class="small" style="color:var(--accent)">Edit</span></button>
+   <div class="divider" style="margin:0"></div>
+   <button class="row" data-act="jump:r-sev"><span style="color:${s.col}">${ic(s.ico,24)}</span><div class="grow"><div class="xs muted">Severity</div><div class="b" style="color:${s.col}">${s.t}</div></div><span class="small" style="color:var(--accent)">Edit</span></button>
+   <div class="divider" style="margin:0"></div>
+   <button class="row" data-act="jump:r-det"><span style="color:var(--accent)">${ic('camera',24)}</span><div class="grow"><div class="xs muted">Details</div><div class="b">${d.photos.length} photo${d.photos.length===1?'':'s'}${d.voice?' · voice note':''}${d.note?' · text':''}</div></div><span class="small" style="color:var(--accent)">Edit</span></button>
+   ${d.photos.length?`<div class="photos" style="grid-template-columns:repeat(4,1fr);gap:6px">${d.photos.map(p=>`<div class="ph" style="border-radius:10px"><img src="${p}" alt=""></div>`).join('')}</div>`:''}
+   ${d.note?`<div class="small muted" style="line-height:1.4">“${esc(d.note)}”</div>`:''}
+  </div>
+  ${!S.online?`<div class="offbar" style="margin-top:14px">${ic('wifioff',18)}No network. The report will be saved and sent automatically when you’re back online.</div>`:''}
+  <div style="height:90px"></div>`,
+  `<button class="btn ${d.sev==='high'?'danger':'primary'}" data-act="send">${ic('send',18)} ${S.online?'Send report':'Save and send later'}</button>`);}
+
+function rDone(id){const r=S.reports.find(x=>x.id===id);const s=SEV[r.sev];const c=contact();const crit=r.sev==='high';
+ return `<div class="flowhead"><span></span><h2>Report #${r.id}</h2><button class="roundbtn plain" data-act="home" aria-label="Close">${ic('close',20)}</button></div>
+ <div style="text-align:center;padding:18px 0 10px">
+  <div style="width:84px;height:84px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;background:${r.status==='queued'?'var(--warn-soft)':'var(--ok-soft)'};color:${r.status==='queued'?'var(--warn)':'var(--ok)'}">${ic(r.status==='queued'?'clock':'check',40,2.6)}</div>
+  <div class="q" style="font-size:24px">${r.status==='queued'?'Saved. Will send when online':'Report sent'}</div>
+  <p class="qsub" style="margin:6px 12px 0">${r.status==='queued'?'You don’t need to keep the app open. We’ll notify you once it’s delivered.':`${c.name} got a notification. You’ll see status updates here and in chat.`}</p>
+ </div>
+ ${crit?`<div class="card" style="border-color:var(--bad);background:var(--bad-soft);margin:12px 0">
+   <div class="b" style="color:var(--bad);display:flex;gap:8px;align-items:center">${ic('alert',20)} Vehicle can’t continue</div>
+   <div class="small" style="line-height:1.45;margin:8px 0 14px">Call now so ${c.name.split(' ')[0]} can arrange help. Hazard lights on, warning triangle out, wear your vest.</div>
+   <div class="btnrow"><button class="btn danger sm" data-act="startcall">${ic('phone',18)} Call ${c.name.split(' ')[0]}</button><button class="btn ghost sm" data-act="gsm">${ic('sim',18)} Phone line</button></div>
+  </div>`:''}
+ <div class="card" style="margin-top:12px"><div class="sect" style="margin:0 0 12px">Status</div>${timeline(r)}</div>
+ <div class="bottomcta"><button class="btn primary" data-act="thread">${ic('chat',18)} Open in chat</button><button class="btn ghost" data-act="home">Done</button></div>
+ <div style="height:130px"></div>`;
+}
+function timeline(r){
+ const order=STATUSES.map(x=>x[0]).filter(k=>k!=='queued'||r.log.queued);
+ const cur=order.indexOf(r.status);
+ return `<div class="tl">${order.map((k,i)=>`<div class="st ${i<cur||r.status==='resolved'?'done':''} ${i===cur&&r.status!=='resolved'?'cur':''}"><span class="bul">${i<cur||r.status==='resolved'?ic('check',13,3.2):''}</span><div><div class="b" style="${i>cur?'color:var(--dim)':''}">${stLabel(k)}</div><div class="xs muted">${r.log[k]||(i>cur?'—':'')}</div></div></div>`).join('')}</div>`;
+}
+function rDetail(id){const r=S.reports.find(x=>x.id===id);const s=SEV[r.sev];
+ const nextLbl={sent:'Logist opens it',seen:'Logist starts work',work:'Logist marks resolved'}[r.status];
+ return `<div class="flowhead"><button class="roundbtn plain" data-act="back" aria-label="Back">${ic('back',22)}</button><h2>Report #${r.id}</h2><span style="width:46px"></span></div>
+ <div class="stack" style="margin-top:8px">
+  <div class="card">
+   <div class="row"><span style="color:var(--accent)">${ic(UNITS[r.unit].icon,26)}</span><div class="grow"><div class="b" style="font-size:18px">${esc(r.cat)}</div><div class="small muted">${UNITS[r.unit].name} · ${UNITS[r.unit].plate} · ${r.date}, ${r.time}</div></div></div>
+   <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><span class="chip ${s.c}">${s.t}</span><span class="chip ${stChip(r.status)}">${stLabel(r.status)}</span></div>
+   ${r.photos.length?`<div class="photos" style="margin-top:14px">${r.photos.map(p=>`<div class="ph"><img src="${p}" alt=""></div>`).join('')}</div>`:''}
+   ${r.note?`<div class="small" style="margin-top:12px;line-height:1.45">${esc(r.note)}</div>`:''}
+   ${r.voice?`<div class="voice" style="margin-top:12px"><span class="mic">${ic('mic',18)}</span><div class="grow small">Voice note</div><span class="small muted">0:${String(r.voice).padStart(2,'0')}</span></div>`:''}
+  </div>
+  <div class="card"><div class="sect" style="margin:0 0 12px">Status</div>${timeline(r)}</div>
+  <div class="btnrow"><button class="btn ghost sm" data-act="thread">${ic('chat',18)} Chat</button><button class="btn ghost sm" data-act="startcall">${ic('phone',18)} Call</button></div>
+  ${nextLbl&&S.online?`<button class="btn sm" style="border:1px dashed var(--line);color:var(--muted)" data-act="advance:${r.id}">Demo: ${nextLbl}</button>`:''}
+ </div>`;
+}
+function movingView(){const c=contact();
+ return `<div class="flowhead"><button class="roundbtn plain" data-act="back" aria-label="Back">${ic('close',20)}</button><h2>Report an issue</h2><span style="width:46px"></span></div>
+ <div style="text-align:center;padding:40px 8px 0">
+  <div style="width:96px;height:96px;border-radius:50%;margin:0 auto 20px;display:grid;place-items:center;background:var(--warn-soft);color:var(--warn)">${ic('truck',44)}</div>
+  <div class="q">You’re driving · 72 km/h</div>
+  <p class="qsub">Pull over safely to fill in the report. If it’s an emergency, call now with one tap.</p>
+ </div>
+ <div class="bottomcta"><button class="btn danger" data-act="startcall">${ic('phone',18)} Call ${c.name}</button><button class="btn ghost" data-act="stopped">I’ve stopped, continue</button></div>`;
+}
+
+/* ---------------- chat thread ---------------- */
+function threadView(id){const c=id==='olena'?LOGIST:id==='marek'?DUTY:contact();const m=S.msgs[c.id];
+ return `<div class="flowhead" style="gap:10px"><button class="roundbtn plain" data-act="back" aria-label="Back">${ic('back',22)}</button>
+  <div class="row grow" style="gap:10px">${avatar(c,'',true).replace('avatar ','avatar " style="width:40px;height:40px;font-size:14px')}<div class="grow"><div class="b ellipsis">${c.name}</div><div class="xs" style="color:${c===LOGIST&&!S.onShift?'var(--muted)':'var(--ok)'}">${c===LOGIST&&!S.onShift?'Off shift until 08:00':'Online · '+c.role}</div></div></div>
+  <button class="roundbtn" data-act="startcall:${c.id}" aria-label="Call">${ic('phone',20)}</button></div>
+ <div class="msgs" style="margin-top:14px">
+  <div class="sysline">${ic('pin',12)} Pinned contact · always at the top of Chat and Calls</div>
+  ${m.map(x=>x.type==='report'?repCard(x.id):`<div class="bub ${x.from}">${esc(x.text)}<span class="t">${x.time}</span></div>`).join('')}
+ </div>
+ <div style="height:120px"></div>
+ <div class="composer">
+  <div class="qchips"><button class="qchip" data-act="report">${ic('alert',15)} Report vehicle issue</button><button class="qchip" data-act="quick:On my way, ETA as planned">On my way</button><button class="qchip" data-act="quick:Arrived at the stop">Arrived</button><button class="qchip" data-act="quick:Stuck in traffic, will be late">Delayed</button></div>
+  <div class="in"><button class="roundbtn plain" style="width:44px;height:44px" data-act="report" aria-label="Attach report">${ic('plus',22)}</button><input id="msgIn" placeholder="Message" autocomplete="off"><button class="roundbtn" style="width:44px;height:44px;background:var(--accent);color:#fff;border:0" data-act="sendmsg:${c.id}" aria-label="Send">${ic('send',18)}</button></div>
+ </div>`;
+}
+function repCard(id){const r=S.reports.find(x=>x.id===id);const s=SEV[r.sev];
+ return `<button class="repcard" data-act="detail:${r.id}">
+  <div class="row" style="gap:8px"><span style="color:${s.col}">${ic('wrench',18)}</span><span class="b grow">Vehicle report #${r.id}</span><span class="xs muted">${r.time}</span></div>
+  <div class="small" style="margin-top:6px">${UNITS[r.unit].plate} · ${esc(r.cat)}</div>
+  ${r.photos.length?`<div class="row" style="gap:6px;margin-top:8px">${r.photos.slice(0,3).map(p=>`<img src="${p}" alt="" style="width:52px;height:52px;border-radius:10px;object-fit:cover">`).join('')}${r.photos.length>3?`<span class="small muted">+${r.photos.length-3}</span>`:''}</div>`:''}
+  <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><span class="chip ${s.c}">${s.t}</span><span class="chip ${stChip(r.status)}">${stLabel(r.status)}</span></div>
+ </button>`;
+}
+
+/* ---------------- call ---------------- */
+function callView(){const c=S.call.c;
+ return `<div class="callscr">${avatar(c,'xl',false)}
+  <div class="b" style="font-size:28px;margin-top:22px">${c.name}</div>
+  <div class="muted" style="margin-top:6px" id="callT">${S.call.gsm?'Calling via phone line…':'Calling…'}</div>
+  <div class="xs muted" style="margin-top:4px">${c.role}${S.call.gsm?' · '+c.phone:' · Vectrum app call'}</div>
+  <div class="callbtns"><div><button class="cb ${S.call.mute?'on':''}" data-act="mute" aria-label="Mute">${ic('micoff',26)}</button><div class="cbl">Mute</div></div>
+   <div><button class="cb" data-act="noop" aria-label="Speaker">${ic('speaker',26)}</button><div class="cbl">Speaker</div></div>
+   <div><button class="cb end" data-act="endcall" aria-label="End call"><span style="transform:rotate(135deg);display:block">${icf('phone',28)}</span></button><div class="cbl">End</div></div></div>
+ </div>`;
+}
+
+/* ---------------- render ---------------- */
+let lastKey='';
+function render(){
+ const ph=document.getElementById('phone');
+ const old=ph.querySelector('.content');const st=old?old.scrollTop:0;
+ const t=topV(); let body='',cls='',showTab=!t;
+ if(!t){body={routes:routesView,chat:chatView,calls:callsView,profile:profileView}[S.tab]();}
+ else{const [v,a]=t.split(':');cls='noTab';
+  body={ 'r-unit':rUnit,'r-cat':rCat,'r-sev':rSev,'r-det':rDet,'r-rev':rRev,
+   'r-done':()=>rDone(+a),'detail':()=>rDetail(+a),'thread':()=>threadView(a),'moving':movingView}[v]();
+  if(v==='thread')cls='full';
+ }
+ const key=(t||S.tab);
+ ph.innerHTML=statusBar()+`<div class="content ${cls}">${!S.online&&!t?`<div style="height:0"></div>`:''}${body}</div>`+(showTab?tabbar():'')+(S.call?callView():'')+sheet()+(S.toast?`<div class="toast">${S.toast}</div>`:'');
+ const c=ph.querySelector('.content');
+ if(key===lastKey)c.scrollTop=st; else if(key.startsWith('thread'))c.scrollTop=c.scrollHeight;
+ lastKey=key;
+ renderPanel();
+}
+function sheet(){
+ if(S.sheet==='discard')return `<div class="scrim" data-act="closesheet"><div class="sheet" data-stop="1"><div class="b" style="font-size:19px">Discard this report?</div><div class="small muted" style="margin-bottom:8px">Photos and notes you added will be deleted.</div><button class="btn danger" data-act="dodiscard">Discard</button><button class="btn ghost" data-act="closesheet">Keep editing</button></div></div>`;
+ if(S.sheet==='gsm'){const c=contact();return `<div class="scrim" data-act="closesheet"><div class="sheet" data-stop="1"><div class="b" style="font-size:19px">Call ${c.name} by phone?</div><div class="small muted" style="margin-bottom:8px">Uses your mobile network, works without internet. Number: <span style="user-select:all;color:var(--fg)">${c.phone}</span></div><button class="btn ok" data-act="startcall:gsm">${ic('phone',18)} Call ${c.phone}</button><button class="btn ghost" data-act="closesheet">Cancel</button></div></div>`;}
+ return '';
+}
+let toastT;
+function toast(html,ms=3200){S.toast=html;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.toast=null;render()},ms)}
+
+/* ---------------- actions ---------------- */
+function push(v){S.stack.push(v);render()}
+function startReport(){S.draft={unit:null,cat:null,catKey:null,sev:null,photos:[],note:'',voice:0};S.recording=false;push(S.moving?'moving':'r-unit')}
+let recTimer,callTimer;
+function stopRec(){clearInterval(recTimer);S.recording=false;S.draft.voice=Math.max(2,S.recSec)}
+function sendReport(){
+ const d=S.draft;if(S.recording)stopRec();
+ const id=S.nextId++;const t=now();
+ const r={id,unit:d.unit,cat:d.cat,sev:d.sev,photos:d.photos.slice(),note:d.note,voice:d.voice,date:'Today',time:t,status:S.online?'sent':'queued',to:contact().id,log:{queued:S.online?null:'Today '+t,sent:S.online?'Today '+t:null}};
+ S.reports.unshift(r);S.msgs[r.to].push({type:'report',id,time:t});
+ S.draft=null;S.stack=['r-done:'+id];render();
+ if(r.status==='sent')scheduleSeen(r);
+}
+function scheduleSeen(r){setTimeout(()=>{if(r.status!=='sent')return;r.status='seen';r.log.seen='Today '+now();toast(`${ic('check',18)}<span><b>${contact().name.split(' ')[0]}</b> viewed report #${r.id}</span>`)},3500)}
+function advance(id){const r=S.reports.find(x=>x.id===id);const c=r.to==='olena'?LOGIST:DUTY;const t=now();
+ if(r.status==='sent'){r.status='seen';r.log.seen='Today '+t}
+ else if(r.status==='seen'){r.status='work';r.log.work='Today '+t;
+  const txt=r.sev==='high'?'Got it. Roadside assistance is on the way, ETA 40 min. Stay safe, I’ll call you in 10 min.':'Seen it. Please stop at MAN Service Konin, exit 241. They’re expecting you.';
+  S.msgs[r.to].push({from:'them',text:txt,time:t});
+  if(!(topV()||'').startsWith('thread'))S.unreadChat++;
+  toast(`<span class="avatar" style="width:32px;height:32px;font-size:12px">${c.ini}</span><span><b>${c.name}</b>: ${txt.slice(0,48)}…</span>`,4000);return;}
+ else if(r.status==='work'){r.status='resolved';r.log.resolved='Today '+t;S.msgs[r.to].push({from:'them',text:`Report #${r.id} is resolved. Thanks for the photos!`,time:t})}
+ render();
+}
+function setOnline(v){S.online=v;
+ if(v){const q=S.reports.filter(r=>r.status==='queued');q.forEach(r=>{r.status='sent';r.log.sent='Today '+now();scheduleSeen(r)});
+  if(q.length){toast(`${ic('check',18)}<span>Back online. Report #${q.map(r=>r.id).join(', #')} sent.</span>`);return;}}
+ render();
+}
+function startCall(target){const c=target==='olena'?LOGIST:target==='marek'?DUTY:contact();
+ S.sheet=null;S.call={c,gsm:target==='gsm',sec:0,mute:false};render();
+ clearInterval(callTimer);let ring=0;
+ callTimer=setInterval(()=>{const el=document.getElementById('callT');ring++;if(ring<3)return;S.call.sec++;if(el)el.textContent='0'+Math.floor(S.call.sec/60)+':'+String(S.call.sec%60).padStart(2,'0')},800);
+}
+function endCall(){clearInterval(callTimer);const k=S.call;const s=k.sec;S.calls.unshift({name:k.c.name,dur:s?`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`:'No answer',missed:!s,time:now()});S.call=null;render()}
+
+document.addEventListener('click',e=>{
+ const stopEl=e.target.closest('[data-stop]');const el=e.target.closest('[data-act]');
+ if(!el)return; if(stopEl&&el.dataset.act==='closesheet'&&el.classList.contains('scrim'))return;
+ const [a,...rest]=el.dataset.act.split(':');const arg=rest.join(':');
+ const d=S.draft;
+ switch(a){
+  case 'tab':S.tab=arg;S.stack=[];if(arg==='chat')S.unreadChat=S.unreadChat;render();break;
+  case 'report':startReport();break;
+  case 'stopped':S.moving=false;S.stack.pop();push('r-unit');break;
+  case 'unit':d.unit=arg;if(d.catKey&&!CATS[arg].some(x=>x[0]===d.catKey)){d.catKey=null;d.cat=null}push('r-cat');break;
+  case 'cat':d.catKey=arg;d.cat=CATS[d.unit].find(x=>x[0]===arg)[1];push('r-sev');break;
+  case 'sev':d.sev=arg;push('r-det');break;
+  case 'demoph':d.photos.push(demoPhoto(d.photos.length));render();break;
+  case 'rmph':d.photos.splice(+arg,1);render();break;
+  case 'voice':if(S.recording){stopRec();render()}else{S.recording=true;S.recSec=0;render();recTimer=setInterval(()=>{S.recSec++;const t=document.getElementById('recT');if(t)t.textContent='0:'+String(S.recSec).padStart(2,'0');if(S.recSec>=60){stopRec();render()}},1000)}break;
+  case 'rmvoice':d.voice=0;render();break;
+  case 'toreview':if(S.recording)stopRec();push('r-rev');break;
+  case 'jump':{const i=S.stack.indexOf(arg);if(i>=0){S.stack=S.stack.slice(0,i+1);render()}break;}
+  case 'send':sendReport();break;
+  case 'back':if(S.recording)stopRec();S.stack.pop();render();break;
+  case 'discard':S.sheet='discard';render();break;
+  case 'dodiscard':if(S.recording)stopRec();S.sheet=null;S.draft=null;S.stack=[];render();break;
+  case 'closesheet':S.sheet=null;render();break;
+  case 'home':S.stack=[];render();break;
+  case 'detail':push('detail:'+arg);break;
+  case 'advance':advance(+arg);break;
+  case 'thread':{const id=arg||contact().id;if(id===contact().id)S.unreadChat=0;
+    if((topV()||'').startsWith('r-done'))S.stack=[];push('thread:'+id);break;}
+  case 'quick':case 'sendmsg':{const inp=document.getElementById('msgIn');const txt=a==='quick'?arg:inp.value.trim();if(!txt)return;
+    const tid=(topV()||'').split(':')[1]||contact().id;S.msgs[tid].push({from:'me',text:txt,time:now()});render();break;}
+  case 'startcall':startCall(arg);break;
+  case 'gsm':S.sheet='gsm';render();break;
+  case 'endcall':endCall();break;
+  case 'mute':S.call.mute=!S.call.mute;render();break;
+  // panel
+  case 'net':setOnline(arg==='on');break;
+  case 'shift':S.onShift=arg==='on';render();break;
+  case 'move':S.moving=arg==='on';render();break;
+  case 'scen':runScen(arg);break;
+ }
+});
+document.addEventListener('input',e=>{if(e.target.dataset.in==='note'&&S.draft)S.draft.note=e.target.value});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='msgIn'){const b=document.querySelector('[data-act^="sendmsg"]');b&&b.click()}
+ if(e.key==='Enter'&&e.target.classList.contains('addph'))document.getElementById('photoInput').click()});
+document.getElementById('photoInput').addEventListener('change',e=>{
+ const files=[...e.target.files].slice(0,6-(S.draft?S.draft.photos.length:0));
+ Promise.all(files.map(f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)}))).then(list=>{if(S.draft){S.draft.photos.push(...list);render()}});
+ e.target.value='';
+});
+
+/* ---------------- side panel ---------------- */
+const NOTES={
+ profile:['<b>Карточка состава:</b> тягач и прицеп отдельными строками, дубль «0%» убран. Остался один показатель «Load» с подписью к прогресс-бару.','<b>Кнопка «Report an issue»</b> прямо в карточке ТС, ниже история заявок по составу со статусами.','<b>Контакт логиста</b> отдельной карточкой. Ночью показывается дежурный диспетчер.','<b>Live location:</b> описание целиком, без обрезки «even wit…».','<b>«System ⌃⌄» → «Appearance · System»</b>: теперь понятно, что это тема.','<b>Нижний отступ:</b> «Account & data deletion» больше не перекрывается таб-баром.'],
+ routes:['<b>Быстрые действия на маршруте:</b> Report issue / Call / Message. Водитель большую часть времени здесь, а не в Профиле.','<b>Баннер открытой заявки</b> над маршрутом, пока она не решена.','Контакт логиста или дежурного внизу экрана.'],
+ chat:['<b>Pinned-диалог с логистом</b> всегда первый. Удалить или открепить нельзя, контакт меняется вместе с назначением.','Пустой экран-тупик заменён: сразу видно, кому писать.','Ночью закреп переключается на дежурного, переписка с логистом остаётся в списке.'],
+ calls:['<b>Pinned-карточка:</b> звонок через приложение (VoIP) и через обычную линию (GSM) без интернета.','Номер показан текстом, его можно выделить.','Статус смены и правило ночного дежурства.'],
+ 'r-unit':['<b>Шаг 1/5.</b> ТС уже подставлено из назначения, нужно только выбрать тягач / прицеп / груз.','Выбор одним тапом сразу ведёт к следующему шагу, отдельная кнопка «Далее» не нужна.'],
+ 'r-cat':['<b>Шаг 2/5.</b> Крупные плитки с иконками, набор зависит от юнита (у прицепа есть сцепка и рефустановка, у груза пломба и температура).'],
+ 'r-sev':['<b>Шаг 3/5.</b> Серьёзность важнее категории: от неё зависит приоритет у логиста и экран после отправки.','Попробуйте «I can’t continue»: после отправки появится экстренный звонок.'],
+ 'r-det':['<b>Шаг 4/5.</b> Сразу камера (на телефоне открывается тыловая). «Demo photo» добавляет тестовый снимок.','<b>Голосовая заметка</b> вместо набора текста. Текст по желанию.','<b>Автоматически:</b> GPS, время, рейс, пробег.'],
+ 'r-rev':['<b>Шаг 5/5.</b> Сводка, каждый пункт можно поправить тапом.','Без сети кнопка меняется на «Save and send later», заявка встаёт в очередь.'],
+ 'r-done':['<b>Подтверждение и таймлайн статусов:</b> Sent → Seen → In progress → Resolved.','Через ~3 с придёт «логист посмотрел» (симуляция).','При критичной поломке появится блок экстренного звонка и памятка по безопасности.','Заявка автоматически появилась карточкой в чате с логистом.'],
+ detail:['<b>Карточка заявки:</b> фото, голос, текст, таймлайн.','Кнопка «Demo: …» симулирует действия логиста. На «In progress» придёт сообщение в чат.'],
+ thread:['<b>Чат с логистом:</b> заявки видны карточками, тап открывает детали.','Быстрые ответы и «Report vehicle issue» над полем ввода.','Звонок из шапки.'],
+ moving:['<b>Защита за рулём:</b> при движении форма недоступна, только экстренный звонок.','«I’ve stopped» продолжает флоу (в демо переключатель «Скорость»).']
+};
+function renderPanel(){
+ const t=topV();const k=t?t.split(':')[0]:S.tab;
+ const seg=(act,on,a,b)=>`<div class="seg"><button class="${on?'on':''}" data-act="${act}:on">${a}</button><button class="${!on?'on':''}" data-act="${act}:off">${b}</button></div>`;
+ document.getElementById('panel').innerHTML=`
+ <div><h1>Vectrum Driver · прототип</h1><p style="margin-top:6px">Кликабельный прототип: заявка о неисправности из карточки ТС и закреплённый контакт логиста в Чате и Звонках. Интерфейс на английском, как в приложении.</p></div>
+ <div class="pbox"><h3>Условия демо</h3>
+  <div class="ctl"><span>Сеть</span>${seg('net',S.online,'Онлайн','Нет сети')}</div>
+  <div class="ctl"><span>Логист</span>${seg('shift',S.onShift,'На смене','Ночь')}</div>
+  <div class="ctl"><span>Скорость</span>${seg('move',S.moving,'72 км/ч','Стоит')}</div>
+ </div>
+ <div class="pbox"><h3>Сценарии</h3><div class="scen">
+  <button data-act="scen:full"><span>Полный флоу заявки (шины, с фото)</span>${ic('chev',16)}</button>
+  <button data-act="scen:crit"><span>Критичная поломка ночью</span>${ic('chev',16)}</button>
+  <button data-act="scen:offline"><span>Заявка без сети → автоотправка</span>${ic('chev',16)}</button>
+  <button data-act="scen:moving"><span>Попытка заполнить на ходу</span>${ic('chev',16)}</button>
+  <button data-act="scen:chat"><span>Pinned логист в Чате</span>${ic('chev',16)}</button>
+  <button data-act="scen:calls"><span>Pinned логист в Звонках</span>${ic('chev',16)}</button>
+ </div></div>
+ <div class="pbox"><h3>Что на этом экране</h3><div class="where">${({profile:'Profile',routes:'Routes',chat:'Chat',calls:'Calls','r-unit':'Report · Unit','r-cat':'Report · Issue','r-sev':'Report · Severity','r-det':'Report · Details','r-rev':'Report · Review','r-done':'Report · Sent',detail:'Report details',thread:'Chat thread',moving:'Driving lock'})[k]}</div>
+  <ul class="notes">${(NOTES[k]||[]).map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
+}
+function runScen(s){
+ S.call=null;S.sheet=null;S.stack=[];clearInterval(callTimer);
+ if(s==='full'){S.online=true;S.onShift=true;S.moving=false;S.tab='profile';render();return;}
+ if(s==='crit'){S.online=true;S.onShift=false;S.moving=false;S.tab='routes';startReport();S.draft.unit='trailer';S.draft.catKey='brakes';S.draft.cat='Brakes';S.draft.sev='high';S.draft.photos=[demoPhoto(1)];S.draft.note='Air leak on trailer brakes, pressure dropping. Stopped on the shoulder.';S.stack=['r-unit','r-cat','r-sev','r-det','r-rev'];render();return;}
+ if(s==='offline'){S.online=false;S.moving=false;S.tab='profile';startReport();S.draft.unit='tractor';S.draft.catKey='lights';S.draft.cat='Lights';S.draft.sev='low';S.draft.photos=[demoPhoto(2)];S.stack=['r-unit','r-cat','r-sev','r-det','r-rev'];render();toast(`${ic('info',18)}<span>Отправьте заявку, затем включите «Онлайн» на панели справа.</span>`,4500);return;}
+ if(s==='moving'){S.moving=true;S.tab='routes';render();toast(`${ic('info',18)}<span>Нажмите «Report issue».</span>`);return;}
+ if(s==='chat'){S.tab='chat';render();return;}
+ if(s==='calls'){S.tab='calls';render();return;}
+}
+render();
+</script>
+</body>
+</html>
